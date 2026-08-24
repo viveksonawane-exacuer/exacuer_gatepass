@@ -1,7 +1,7 @@
 {
   "name": "Visitor Gate",
   "short_name": "Visitor Gate",
-  "description": "Precious Alloy Components — visitor check-in, host approvals, and gate passes",
+  "description": "Exacuer Global — visitor check-in, host approvals, and gate passes",
   "start_url": "/vms/",
   "display": "standalone",
   "background_color": "#F8FAFC",

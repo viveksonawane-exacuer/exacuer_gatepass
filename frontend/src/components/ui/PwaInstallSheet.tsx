@@ -42,7 +42,7 @@ export function PwaInstallSheet({
           <BrandLogo variant="icon" className="pwa-install-sheet-logo" />
           <div className="pwa-install-sheet-brand-copy">
             <strong>Visitor Gate</strong>
-            <span>Precious Alloy Components</span>
+            <span>Exacuer Global</span>
           </div>
         </div>
 

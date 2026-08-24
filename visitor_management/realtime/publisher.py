@@ -24,39 +24,57 @@ def publish_vms_event(
 		frappe.publish_realtime(
 			event="vms_visitor_update",
 			message=soft_message,
-			after_commit=True,
+			after_commit=False,
 		)
 		if user:
 			frappe.publish_realtime(
 				event="vms_visitor_update",
 				message=urgent_message,
 				user=user,
-				after_commit=True,
+				after_commit=False,
 			)
 
-		if event == "host_notified" and user:
+		if event == "host_notified":
 			frappe.publish_realtime(
 				event="vms_host_alert",
 				message=urgent_message,
-				user=user,
-				after_commit=True,
+				after_commit=False,
 			)
+			if user:
+				frappe.publish_realtime(
+					event="vms_host_alert",
+					message=urgent_message,
+					user=user,
+					after_commit=False,
+				)
 
-		if event == "creator_alert" and user:
+		if event == "creator_alert":
 			frappe.publish_realtime(
 				event="vms_creator_alert",
 				message=urgent_message,
-				user=user,
-				after_commit=True,
+				after_commit=False,
 			)
+			if user:
+				frappe.publish_realtime(
+					event="vms_creator_alert",
+					message=urgent_message,
+					user=user,
+					after_commit=False,
+				)
 
-		if event == "security_checkout_required" and user:
+		if event == "security_checkout_required":
 			frappe.publish_realtime(
 				event="vms_security_alert",
 				message=urgent_message,
-				user=user,
-				after_commit=True,
+				after_commit=False,
 			)
+			if user:
+				frappe.publish_realtime(
+					event="vms_security_alert",
+					message=urgent_message,
+					user=user,
+					after_commit=False,
+				)
 	except Exception:
 		frappe.log_error(title="VMS realtime publish failed")
 

@@ -1,12 +1,12 @@
 ---
-description: Frontend-only React UI/UX — enterprise Precious Alloy design system
+description: Frontend-only React UI/UX — enterprise Exacuer Global design system
 globs:
   - frontend/**/*
   - visitor_management/www/**
 alwaysApply: true
 ---
 
-# Precious Alloy VMS — Design Phase
+# Exacuer Global VMS — Design Phase
 
 While designing this app, work **frontend only**. Do not expand into backend work.
 
@@ -21,7 +21,7 @@ While designing this app, work **frontend only**. Do not expand into backend wor
 
 Follow `/DESIGN.md` and `frontend/src/styles/tokens.css`.
 
-- Company: **Precious Alloy Components Pvt. Ltd.**
+- Company: **Exacuer Global**
 - Logo: only `BrandLogo` → light/dark wordmark + icon under `public/brand/` (theme-aware)
 - Welcome splash is **inside Add Visitor /check-in**, not login
 - Feel: premium industrial enterprise (Fluent / Fiori / Honeywell-like) — not startup

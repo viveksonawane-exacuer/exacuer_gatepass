@@ -13,14 +13,19 @@ declare global {
 /** Frappe realtime namespace URL (matches desk socketio_client.get_host). */
 export function resolveSocketHost(): string {
   const boot = window.vms_boot || {};
-  const sitename =
+  let sitename =
     boot.sitename ||
     document.documentElement.dataset.frappeSite ||
     window.location.hostname;
+
+  if (sitename === "localhost" || sitename === "127.0.0.1" || sitename === "0.0.0.0") {
+    sitename = "exacuer.gatepass";
+  }
+
   const origin = window.location.origin;
   const isDev = Boolean(boot.developer_mode);
 
-  if (isDev && boot.socketio_port) {
+  if (isDev && boot.socketio_port && window.location.port !== "5173") {
     const { protocol, hostname } = window.location;
     return `${protocol}//${hostname}:${boot.socketio_port}/${sitename}`;
   }

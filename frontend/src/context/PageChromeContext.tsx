@@ -20,7 +20,7 @@ export type PageChromeOptions = {
 };
 
 const DEFAULT_CHROME: PageChromeOptions = {
-  title: "Precious Alloys",
+  title: "Exacuer Global",
   subtitle: "MAIN GATE DESK",
   showBack: false,
   showNotification: true,

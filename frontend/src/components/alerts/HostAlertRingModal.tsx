@@ -3,34 +3,53 @@ import type { ActiveHostAlert } from "@/services/hostAlertManager";
 type Props = {
   alert: ActiveHostAlert;
   onReview: () => void;
+  onClose?: () => void;
 };
 
-export function HostAlertRingModal({ alert, onReview }: Props) {
+export function HostAlertRingModal({ alert, onReview, onClose }: Props) {
   const minutesWaiting = Math.max(1, Math.floor((Date.now() - alert.receivedAt) / 60_000));
   const isSecurity = alert.variant === "security";
   const isCreator = alert.variant === "creator";
+  const titleLower = (alert.title || "").toLowerCase();
+  const msgLower = (alert.message || "").toLowerCase();
+  const isCheckedIn = titleLower.includes("checked in") || msgLower.includes("checked in");
+  const isCheckedOut = titleLower.includes("checked out") || msgLower.includes("checked out");
 
   const kicker = isSecurity
     ? "Checkout required"
-    : isCreator
-      ? alert.title || "Visitor update"
-      : alert.title || "Visitor at gate";
+    : isCheckedOut
+      ? "Visitor checked out"
+      : isCheckedIn
+        ? "Visitor checked in"
+        : isCreator
+          ? alert.title || "Visitor update"
+          : alert.title || "Visitor at gate";
 
   const meta = isSecurity
     ? `Checkout pending${alert.reminderCount > 0 ? ` · Reminder ${alert.reminderCount + 1}` : ""}`
-    : isCreator
-      ? `Action needed${alert.reminderCount > 0 ? ` · Ring ${alert.reminderCount + 1}` : ""}`
-      : `Waiting ${minutesWaiting} min${alert.reminderCount > 0 ? ` · Ring ${alert.reminderCount + 1}` : ""}`;
+    : isCheckedOut
+      ? "Visit completed"
+      : isCheckedIn
+        ? "Visitor is on premises"
+        : isCreator
+          ? `Action needed${alert.reminderCount > 0 ? ` · Ring ${alert.reminderCount + 1}` : ""}`
+          : `Waiting ${minutesWaiting} min${alert.reminderCount > 0 ? ` · Ring ${alert.reminderCount + 1}` : ""}`;
 
   const cta = isSecurity
     ? "Open Inside / Checkout"
-    : isCreator
-      ? "Open visit"
-      : "Allow / Review";
+    : isCheckedOut
+      ? "View Details"
+      : isCheckedIn
+        ? "View Visitor"
+        : isCreator
+          ? "Open visit"
+          : "Allow / Review";
+
+  const handleDismiss = onClose || onReview;
 
   return (
     <div className="vm-host-ring-modal" role="alertdialog" aria-modal="true" aria-live="assertive">
-      <div className="vm-host-ring-backdrop" aria-hidden />
+      <div className="vm-host-ring-backdrop" onClick={handleDismiss} aria-hidden />
       <div className="vm-host-ring-waves" aria-hidden>
         <span />
         <span />
@@ -38,6 +57,16 @@ export function HostAlertRingModal({ alert, onReview }: Props) {
       </div>
 
       <div className="vm-host-ring-card">
+        <button
+          type="button"
+          className="vm-confirm-modal-close"
+          onClick={handleDismiss}
+          aria-label="Close"
+          style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 10 }}
+        >
+          ✕
+        </button>
+
         <div className="vm-host-ring-bell" aria-hidden>
           <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.2">
             {isSecurity ? (

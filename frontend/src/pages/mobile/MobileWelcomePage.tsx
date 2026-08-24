@@ -41,7 +41,7 @@ export function VisitorWelcomePanel({ lang, onLangChange, onGetStarted }: Visito
       </div>
 
       <header className="welcome-brand">
-        <BrandLogo variant="full" className="welcome-wordmark" alt="Precious Alloys" />
+        <BrandLogo variant="full" className="welcome-wordmark" />
         <p className="welcome-brand-tag">{vt(lang, "brand_tag")}</p>
       </header>
 

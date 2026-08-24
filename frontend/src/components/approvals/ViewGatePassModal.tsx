@@ -106,7 +106,7 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
   const hostName = pass?.person_to_meet_name || pass?.host_name || visitor.person_to_meet_name || "—";
   const floor = pass?.floor || visitor.floor || "—";
   const company =
-    (pass?.company || visitor.company || defaultCompany || "").trim() || "Precious Alloys";
+    (pass?.company || visitor.company || defaultCompany || "").trim() || "Exacuer Global";
   const visitorCompany =
     (pass?.visitor_company || visitor.visitor_company || "").trim() || "—";
   const passUrl = pass?.pass_url;
@@ -142,9 +142,6 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
         </button>
 
         <div className="vm-confirm-modal-top vm-view-gate-pass-top vm-no-print">
-          <span className="vm-gate-pass-om" aria-hidden>
-            ॐ
-          </span>
           <h2 id="vm-view-gate-pass-title" className="vm-confirm-modal-title">
             View Gate Pass
           </h2>

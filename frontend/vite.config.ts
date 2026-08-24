@@ -28,7 +28,7 @@ export default defineConfig(({ command, mode }) => {
 							name: "Visitor Gate",
 							short_name: "Visitor Gate",
 							description:
-								"Precious Alloy Components — visitor check-in, host approvals, and gate passes",
+								"Exacuer Global — visitor check-in, host approvals, and gate passes",
 							theme_color: "#0A3D91",
 							background_color: "#F8FAFC",
 							display: "standalone",
@@ -182,32 +182,37 @@ export default defineConfig(({ command, mode }) => {
 
 function getProxyOptions() {
 	const config = getCommonSiteConfig();
-	const default_site = config?.default_site ?? null;
+	const default_site = config?.default_site ?? "exacuer.gatepass";
 	// Prefer VITE_FRAPPE_URL (.env) so local port can differ from common_site_config.
 	const envUrl = process.env.VITE_FRAPPE_URL?.trim();
 	const target =
 		envUrl && /^https?:\/\//.test(envUrl)
 			? envUrl.replace(/\/$/, "")
-			: `http://127.0.0.1:${config?.webserver_port ?? 8000}`;
-	// Always proxy to loopback when possible — site hostnames (e.g. precious.alloys)
-	// often are not in /etc/hosts. Set Host so Frappe multi-tenancy still resolves.
+			: `http://127.0.0.1:8028`;
+	const socketioPort = config?.socketio_port ?? 9003;
 	return {
 		"^/(app|login|api|assets|files|private)": {
 			target,
 			ws: true,
 			changeOrigin: true,
-			configure(proxy) {
-				proxy.on("proxyReq", (proxyReq, req) => {
+			configure(proxy: any) {
+				proxy.on("proxyReq", (proxyReq: any, req: any) => {
 					let site_name = String(req.headers.host || "").split(":")[0];
 					if (
-						(site_name === "localhost" || site_name === "127.0.0.1") &&
-						default_site
+						site_name === "localhost" ||
+						site_name === "127.0.0.1" ||
+						site_name === "0.0.0.0"
 					) {
-						site_name = default_site;
+						site_name = default_site || "exacuer.gatepass";
 					}
 					proxyReq.setHeader("Host", site_name);
 				});
 			},
+		},
+		"^/socket\\.io": {
+			target: `http://127.0.0.1:${socketioPort}`,
+			ws: true,
+			changeOrigin: true,
 		},
 	};
 }

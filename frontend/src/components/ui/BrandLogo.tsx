@@ -1,3 +1,5 @@
+import { APP_NAME } from "@/config/env";
+
 type BrandLogoVariant = "full" | "mark" | "on-dark" | "icon";
 
 type BrandLogoProps = {
@@ -16,15 +18,15 @@ function assetUrl(file: string) {
 export function brandLogoSrc(variant: BrandLogoVariant = "full") {
   const onDark = variant === "on-dark";
   if (variant === "full") {
-    return assetUrl(onDark ? "precious-alloys-logo-dark.png" : "precious-alloys-logo-light.png");
+    return assetUrl(onDark ? "exacuer-logo-dark.png" : "exacuer-logo-light.png");
   }
-  return assetUrl(onDark ? "precious-alloys-icon-dark.png" : "precious-alloys-icon-light.png");
+  return assetUrl(onDark ? "exacuer-icon-dark.png" : "exacuer-icon-light.png");
 }
 
 export function BrandLogo({
   variant = "full",
   className = "",
-  alt = "Precious Alloys",
+  alt = APP_NAME,
 }: BrandLogoProps) {
   const square = variant !== "full";
 

@@ -16,6 +16,6 @@ export const APP_BASE_PATH = IS_CAPACITOR_BUILD
 
 export const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-export const APP_NAME = "Precious Alloys";
+export const APP_NAME = "Exacuer Global";
 export const APP_TAGLINE = "Visitor Management";
-export const COMPANY_NAME = "Precious Alloy Components Pvt. Ltd.";
+export const COMPANY_NAME = "Exacuer Global";

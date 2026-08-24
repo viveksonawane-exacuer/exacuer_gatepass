@@ -47,7 +47,7 @@ const en: UiDict = {
   todays_visitors: "Today's Visitors",
 
   // Brand / chrome
-  brand_title: "Precious Alloys",
+  brand_title: "Exacuer Global",
   main_gate_desk: "MAIN GATE DESK",
 
   // Home dashboard
@@ -224,7 +224,7 @@ const hi: UiDict = {
   current_time: "वर्तमान समय",
   todays_visitors: "आज के विज़िटर",
 
-  brand_title: "Precious Alloys",
+  brand_title: "Exacuer Global",
   main_gate_desk: "मुख्य गेट डेस्क",
 
   status_overview: "स्थिति अवलोकन",
@@ -395,7 +395,7 @@ const mr: UiDict = {
   current_time: "सध्याची वेळ",
   todays_visitors: "आजचे अभ्यागत",
 
-  brand_title: "Precious Alloys",
+  brand_title: "Exacuer Global",
   main_gate_desk: "मुख्य गेट डेस्क",
 
   status_overview: "स्थिती आढावा",

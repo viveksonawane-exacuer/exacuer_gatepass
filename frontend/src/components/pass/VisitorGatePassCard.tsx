@@ -59,7 +59,7 @@ export function VisitorGatePassCard({
   const absolute = resolveUrl(scanTarget) || scanTarget;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(absolute)}`;
   const photo = resolveUrl(photoUrl || undefined);
-  const companyLabel = (company || "").trim() || "Precious Alloys";
+  const companyLabel = (company || "").trim() || "Exacuer Global";
   const visitorCompanyLabel = (visitorCompany || "").trim() || "—";
   const count = Math.max(1, Number(visitorCount) || 1);
   const showGuestNames = count > 1;
@@ -80,7 +80,6 @@ export function VisitorGatePassCard({
   return (
     <div className="vm-gate-pass-card-root" id="vms-gate-pass-print">
       <div className="vm-gate-pass-print-banner vm-print-only" aria-hidden>
-        <span className="vm-gate-pass-om">ॐ</span>
         <strong>{companyLabel}</strong>
         <span>Visitor Gate Pass</span>
       </div>

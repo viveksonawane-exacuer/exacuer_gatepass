@@ -45,7 +45,7 @@ export function ErpNextToast({ toast, onClose }: Props) {
 
         <span className="vm-toast-copy">
           <span className="vm-toast-copy-head">
-            <span className="vm-toast-app-name">Precious Alloys</span>
+            <span className="vm-toast-app-name">Exacuer Global</span>
             <span className="vm-toast-time">{timeLabel}</span>
           </span>
           <strong className="vm-toast-title">{toast.title}</strong>

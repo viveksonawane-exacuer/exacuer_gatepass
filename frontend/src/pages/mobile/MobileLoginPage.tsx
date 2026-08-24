@@ -75,7 +75,7 @@ export function MobileLoginPage() {
         <main className="vm-auth-body">
           <div className="vm-auth-intro">
             <BrandLogo variant="full" className="welcome-wordmark" />
-            <h1 className="vm-auth-title">Sign In to Precious Alloys</h1>
+            <h1 className="vm-auth-title">Sign In to Exacuer Global</h1>
             <p className="vm-auth-subtitle">Use your ERPNext username or email and password</p>
           </div>
 

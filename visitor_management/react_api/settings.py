@@ -21,23 +21,44 @@ def get_masters() -> dict:
 	def active_list(doctype: str, fields: list[str], order_by: str = "modified desc"):
 		if not frappe.db.exists("DocType", doctype):
 			return []
-		safe_fields = [f for f in fields if f == "name" or frappe.db.has_column(doctype, f)]
+		if not frappe.db.table_exists(doctype):
+			return []
+		try:
+			existing_cols = set(frappe.db.get_table_columns(doctype))
+		except Exception:
+			existing_cols = {"name"}
+
+		safe_fields = [f for f in fields if f == "name" or f in existing_cols]
 		if not safe_fields:
 			safe_fields = ["name"]
-		filters = {"is_active": 1} if frappe.db.has_column(doctype, "is_active") else {}
-		order_field = (order_by or "name asc").split()[0]
-		safe_order = order_by if order_field == "name" or frappe.db.has_column(doctype, order_field) else "name asc"
-		return frappe.get_all(
-			doctype,
-			filters=filters,
-			fields=safe_fields,
-			order_by=safe_order,
-			limit_page_length=500,
-			ignore_permissions=True,
-		)
+		filters = {"is_active": 1} if "is_active" in existing_cols else {}
+
+		order_parts = (order_by or "name asc").split(",")
+		valid_orders = []
+		for part in order_parts:
+			f_name = part.strip().split()[0]
+			if f_name == "name" or f_name in existing_cols:
+				valid_orders.append(part.strip())
+		safe_order = ", ".join(valid_orders) if valid_orders else "name asc"
+
+		try:
+			return frappe.get_all(
+				doctype,
+				filters=filters,
+				fields=safe_fields,
+				order_by=safe_order,
+				limit_page_length=500,
+				ignore_permissions=True,
+			)
+		except Exception as exc:
+			frappe.log_error(title=f"VMS get_masters failed for {doctype}", message=str(exc))
+			try:
+				return frappe.get_all(doctype, fields=["name"], limit_page_length=500, ignore_permissions=True)
+			except Exception:
+				return []
 
 	genders: list[dict] = []
-	if frappe.db.exists("DocType", "Gender"):
+	if frappe.db.exists("DocType", "Gender") and frappe.db.table_exists("Gender"):
 		genders = frappe.get_all(
 			"Gender",
 			fields=["name"],
@@ -53,8 +74,8 @@ def get_masters() -> dict:
 		"towers": active_list("Tower", ["name", "tower_name", "building"]),
 		"floors": active_list(
 			"Floor",
-			["name", "floor_name", "building", "tower", "floor_number"],
-			order_by="floor_number asc, floor_name asc",
+			["name", "floor_name"],
+			order_by="floor_name asc",
 		),
 		"units": active_list("Unit", ["name", "unit_name", "floor", "unit_code"]),
 		"departments": active_list("VMS Department", ["name", "department_name", "organization"]),

@@ -257,7 +257,7 @@ def _status_copy(status: str, visitor_name: str, remarks: str | None = None) -> 
 			"checked_out",
 			_("Visitor checked out"),
 			_("{0} has checked out.").format(visitor_name),
-			None,
+			"host",
 		)
 	if status == "Cancelled":
 		return (

@@ -18,7 +18,7 @@ import {
   needsBackgroundPushSetup,
   shouldShowNotificationPermissionModal,
 } from "@/components/alerts/NotificationPermissionModal";
-import { type AuthProfile } from "@/api/vms";
+import { notificationApi, type AuthProfile } from "@/api/vms";
 import { canApproveReject, resolveMode } from "@/lib/roles";
 import {
   type ActiveHostAlert,
@@ -67,9 +67,13 @@ function isHostAlertRecipient(user: AuthProfile | null): boolean {
 function payloadTargetsCurrentHost(payload: HostAlertPayload, user: AuthProfile | null): boolean {
   const ids = currentUserIds(user);
   if (!ids.length) return false;
+  if (ids.includes("administrator")) return true;
   const hostUser = (payload.host_user || "").trim().toLowerCase();
-  if (!hostUser) return false;
-  return ids.includes(hostUser);
+  const hostName = (payload.host || "").trim().toLowerCase();
+  const userFullName = (user?.full_name || "").trim().toLowerCase();
+  if (hostUser && ids.includes(hostUser)) return true;
+  if (hostName && (ids.includes(hostName) || (userFullName && userFullName === hostName))) return true;
+  return false;
 }
 
 function payloadTargetsCurrentCreator(payload: HostAlertPayload, user: AuthProfile | null): boolean {
@@ -115,6 +119,7 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
   /** Avoid double-register when both dedicated alert channel and visitor_update arrive. */
   const securityAlertCooldownRef = useRef<Record<string, number>>({});
   const ringAlertCooldownRef = useRef<Record<string, number>>({});
+  const seenAlertsRef = useRef<Set<string>>(new Set());
 
   const activeAlert = useMemo(() => {
     const list = Object.values(alerts).filter((a) => !suppressedEntries[a.visitorEntry]);
@@ -124,6 +129,7 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
 
   const clearAlert = useCallback((visitorEntry: string) => {
     stopHostAlertReminders(visitorEntry);
+    seenAlertsRef.current.delete(visitorEntry);
     setSuppressedEntries((prev) => {
       if (!prev[visitorEntry]) return prev;
       const next = { ...prev };
@@ -184,19 +190,28 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
       const visitorName = payload.visitor_name || visitorEntry;
       const message = payload.message || `${visitorName} is waiting for your approval at the gate.`;
       const hostName = payload.host || "Host";
+
       const isCheckedIn =
         payload.lifecycle_event === "checked_in" ||
         payload.event === "checked_in" ||
-        payload.status === "Checked In";
+        payload.status === "Checked In" ||
+        (payload.message || "").toLowerCase().includes("checked in");
+      const isCheckedOut =
+        payload.lifecycle_event === "checked_out" ||
+        payload.event === "checked_out" ||
+        payload.status === "Checked Out" ||
+        (payload.message || "").toLowerCase().includes("checked out");
       const isCancelled =
         payload.lifecycle_event === "cancelled" ||
         payload.event === "cancelled" ||
         payload.status === "Cancelled";
       const title = isCancelled
         ? "Visit cancelled"
-        : isCheckedIn
-          ? "Visitor checked in"
-          : "Visitor waiting at gate";
+        : isCheckedOut
+          ? "Visitor checked out"
+          : isCheckedIn
+            ? "Visitor checked in"
+            : "Visitor waiting at gate";
 
       const alert: ActiveHostAlert = {
         visitorEntry,
@@ -221,7 +236,9 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
       startHostAlertRing();
       void pushHostAlertNotification(visitorEntry, title, message, 0, routeForHostAlert(alert));
 
-      startHostAlertReminders(alert, onReminderTick);
+      if (!isCheckedIn && !isCheckedOut && !isCancelled) {
+        startHostAlertReminders(alert, onReminderTick);
+      }
     },
     [onReminderTick, withinRingCooldown],
   );
@@ -423,6 +440,84 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.user]);
 
+  // Periodic fallback sync: ensures unread host alerts always trigger the ring popup
+  useEffect(() => {
+    if (!user?.authenticated || !user?.user) return;
+
+    let cancelled = false;
+    const syncLatestAlerts = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const notifs = await notificationApi.list(10);
+        if (cancelled || !Array.isArray(notifs)) return;
+
+        const unreadAlert = notifs.find((n) => {
+          if (n.read) return false;
+          const sub = (n.subject || "").toLowerCase();
+          const body = (n.email_content || "").toLowerCase();
+          return (
+            (n.document_type === "Visitor Entry" || Boolean(n.document_name)) &&
+            (sub.includes("waiting") ||
+              sub.includes("approval") ||
+              sub.includes("check in") ||
+              sub.includes("checked in") ||
+              sub.includes("check out") ||
+              sub.includes("checked out") ||
+              body.includes("waiting") ||
+              body.includes("approval") ||
+              body.includes("check in") ||
+              body.includes("checked in") ||
+              body.includes("check out") ||
+              body.includes("checked out"))
+          );
+        });
+
+        if (unreadAlert && unreadAlert.document_name) {
+          const entryName = unreadAlert.document_name;
+          if (seenAlertsRef.current.has(entryName)) return;
+          seenAlertsRef.current.add(entryName);
+
+          const subject = unreadAlert.subject || "Visitor update";
+          const body = unreadAlert.email_content || subject;
+          const subLower = subject.toLowerCase();
+          const bodyLower = body.toLowerCase();
+          const isCheckedIn = subLower.includes("checked in") || bodyLower.includes("checked in");
+          const isCheckedOut = subLower.includes("checked out") || bodyLower.includes("checked out");
+          const eventName = isCheckedOut ? "checked_out" : isCheckedIn ? "checked_in" : "host_notified";
+          const statusName = isCheckedOut ? "Checked Out" : isCheckedIn ? "Checked In" : "Pending Approval";
+
+          const visitorName =
+            body.replace(/^Visitor\s+/i, "").split(/\s+(?:is|has)\s+/i)[0]?.trim() ||
+            subject.replace(/^Visitor\s+/i, "").split(/\s+(?:waiting|checked)/i)[0]?.trim() ||
+            entryName;
+
+          registerAlert({
+            visitor_entry: entryName,
+            visitor_name: visitorName,
+            message: body,
+            host: user.full_name || user.user || undefined,
+            host_user: user.user || undefined,
+            lifecycle_event: eventName,
+            event: eventName,
+            status: statusName,
+          });
+        }
+      } catch {
+        /* best-effort background sync */
+      }
+    };
+
+    void syncLatestAlerts();
+    const interval = window.setInterval(() => {
+      void syncLatestAlerts();
+    }, 3500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [user, registerAlert]);
+
   useEffect(() => {
     return () => {
       stopAllHostAlertReminders();
@@ -463,7 +558,13 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
         }}
       />
       {children}
-      {activeAlert ? <HostAlertRingModal alert={activeAlert} onReview={handleReview} /> : null}
+      {activeAlert ? (
+        <HostAlertRingModal
+          alert={activeAlert}
+          onReview={handleReview}
+          onClose={() => snoozeAlertModal(activeAlert.visitorEntry)}
+        />
+      ) : null}
     </HostAlertContext.Provider>
   );
 }

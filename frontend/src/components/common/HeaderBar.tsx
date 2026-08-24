@@ -31,7 +31,7 @@ function resolveUserImage(path?: string | null): string | null {
 }
 
 export function HeaderBar({
-  title = "Precious Alloys",
+  title = "Exacuer Global",
   subtitle = "MAIN GATE DESK",
   showBack = false,
   onBack,
@@ -78,6 +78,10 @@ export function HeaderBar({
 
   useEffect(() => {
     void loadPendingCount();
+    const interval = window.setInterval(() => {
+      void loadPendingCount();
+    }, 15_000);
+    return () => window.clearInterval(interval);
   }, [loadPendingCount]);
 
   useVmsRealtime(() => {

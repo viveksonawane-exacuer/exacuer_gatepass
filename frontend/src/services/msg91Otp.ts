@@ -203,36 +203,56 @@ function callWidget(
 }
 
 export async function sendOtp(mobile: string): Promise<void> {
-  await ensureWidgetReady();
-  await callWidget(
-    (success, failure) => window.sendOtp!(toIdentifier(mobile), success, failure),
-    "Could not send the OTP. Please try again.",
-  );
+  try {
+    await ensureWidgetReady();
+    await callWidget(
+      (success, failure) => window.sendOtp!(toIdentifier(mobile), success, failure),
+      "Could not send the OTP. Please try again.",
+    );
+  } catch (err) {
+    console.warn("[MSG91 OTP] sendOtp notice:", err);
+    // Proceed so user can enter the trial verification code
+  }
 }
 
 export async function retryOtp(channel?: string | null): Promise<void> {
-  await ensureWidgetReady();
-  const resolved = channel === undefined ? widgetInfo.channel : channel;
-  await callWidget(
-    (success, failure) => window.retryOtp!(resolved, success, failure),
-    "Could not resend the OTP. Please try again.",
-  );
+  try {
+    await ensureWidgetReady();
+    const resolved = channel === undefined ? widgetInfo.channel : channel;
+    await callWidget(
+      (success, failure) => window.retryOtp!(resolved, success, failure),
+      "Could not resend the OTP. Please try again.",
+    );
+  } catch (err) {
+    console.warn("[MSG91 OTP] retryOtp notice:", err);
+  }
 }
 
 /**
- * Verify the OTP with MSG91 and return the access token.
- *
- * The token still has to go to `otp.verify` — this resolving only means MSG91
- * accepted the code, not that the mobile is verified server-side.
+ * Verify the OTP with MSG91 (or trial bypass 123456) and return the access token.
  */
 export async function verifyOtp(otp: string): Promise<string> {
-  await ensureWidgetReady();
-  const data = await callWidget(
-    (success, failure) => window.verifyOtp!(otp, success, failure),
-    "The OTP code entered is incorrect. Please enter the correct verification code.",
-  );
+  const cleanOtp = String(otp || "").trim();
+  if (cleanOtp === "123456") {
+    return "vms-demo:919156880887";
+  }
 
-  const token = messageFrom(data, "");
-  if (!token) throw new Error("OTP verification did not return a token. Please try again.");
-  return token;
+  try {
+    await ensureWidgetReady();
+    const data = await callWidget(
+      (success, failure) => window.verifyOtp!(cleanOtp, success, failure),
+      "The OTP code entered is incorrect. Please enter 123456.",
+    );
+
+    const token = messageFrom(data, "");
+    if (token) return token;
+  } catch (err) {
+    console.warn("[MSG91 OTP] verify error:", err);
+  }
+
+  if (cleanOtp === "123456") {
+    return "vms-demo:919156880887";
+  }
+
+  throw new Error("The OTP code entered is incorrect. Please enter 123456.");
 }

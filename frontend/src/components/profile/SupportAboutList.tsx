@@ -39,7 +39,7 @@ export function SupportAboutList() {
           <div className="vm-menu-item-left">
             <span className="vm-menu-icon-bg" style={{ background: "#EFF6FF" }}>ℹ️</span>
             <div>
-              <span className="vm-menu-title" style={{ fontSize: "0.9rem" }}>About Precious Alloys</span>
+              <span className="vm-menu-title" style={{ fontSize: "0.9rem" }}>About Exacuer Global</span>
             </div>
           </div>
           <span style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: 600 }}>v1.0.0 ❯</span>

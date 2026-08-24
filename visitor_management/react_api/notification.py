@@ -27,14 +27,11 @@ def _is_security_alert_subject(subject: str | None, body: str | None = None) -> 
 
 
 def _filter_notifications_for_user(rows: list[dict], user: str) -> list[dict]:
-	"""Keep alerts that belong to this user as host, or gate checkout/reject alerts.
-
-	Notification Log is already ``for_user``-scoped. Extra filter stops gate/admin
-	accounts from seeing every host's pending rings that were also copied to them
-	as creator / broad recipient.
-	"""
-	if not rows:
+	"""Keep alerts that belong to this user as host, or gate checkout/reject alerts."""
+	if not rows or user == "Administrator":
 		return rows
+
+	from visitor_management.services.visitor_notifications import resolve_host_user
 
 	ve_names = [
 		r.get("document_name")
@@ -48,8 +45,11 @@ def _filter_notifications_for_user(rows: list[dict], user: str) -> list[dict]:
 			filters={"name": ["in", list(set(ve_names))]},
 			fields=["name", "person_to_meet", "owner"],
 		):
+			person = (row.person_to_meet or "").strip()
+			host_login = resolve_host_user(person) or person
 			host_by_name[row.name] = {
-				"person_to_meet": (row.person_to_meet or "").strip(),
+				"person_to_meet": person,
+				"host_user": host_login,
 				"owner": (row.owner or "").strip(),
 			}
 
@@ -65,15 +65,16 @@ def _filter_notifications_for_user(rows: list[dict], user: str) -> list[dict]:
 
 		meta = host_by_name.get(row["document_name"]) or {}
 		person = meta.get("person_to_meet") or ""
+		host_login = meta.get("host_user") or ""
 		owner = meta.get("owner") or ""
 
 		# Assigned host always sees their visitor alerts.
-		if person and person == user:
+		if (person and person == user) or (host_login and host_login == user):
 			filtered.append(row)
 			continue
 
 		# Soft "you created this" only when the user is still the host or host-only creator.
-		if owner == user and (person == user or host_only):
+		if owner == user and (person == user or host_login == user or host_only):
 			filtered.append(row)
 			continue
 

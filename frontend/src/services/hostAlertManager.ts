@@ -48,9 +48,6 @@ const reminders = new Map<string, ReminderState>();
 let audioContext: AudioContext | null = null;
 let ringTimer: ReturnType<typeof setInterval> | null = null;
 
-/** Faster than before — closer to Tawk / chat-widget urgency. */
-const RING_INTERVAL_MS = 2_200;
-
 function baseNotificationId(visitorEntry: string): number {
   let hash = 0;
   for (let i = 0; i < visitorEntry.length; i += 1) {
@@ -174,13 +171,10 @@ export async function enableHostAlertPermissions(): Promise<{
   return { notifications, soundReady: true, webPush };
 }
 
-/** Repeat ring + haptic until host opens the alert (MyGate-style). */
+/** Play chime + haptic once when alert arrives (reminders fire every 5 min). */
 export function startHostAlertRing(): void {
   stopHostAlertRing();
   void fireHostAlertFeedback();
-  ringTimer = setInterval(() => {
-    void fireHostAlertFeedback();
-  }, RING_INTERVAL_MS);
 }
 
 export function stopHostAlertRing(): void {
