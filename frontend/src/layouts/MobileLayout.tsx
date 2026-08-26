@@ -7,6 +7,7 @@ import { AndroidBrowserHint } from "@/components/ui/AndroidBrowserHint";
 import { PwaInstallNudge } from "@/components/ui/PwaInstallNudge";
 import { PageChromeProvider, usePageChromeState } from "@/context/PageChromeContext";
 import { HostAlertProvider } from "@/context/HostAlertContext";
+import { clearApiCache } from "@/api/vms";
 import { VMS_PAGE_REFRESH_EVENT } from "@/hooks/usePageRefresh";
 import { setSpaNavigators, syncSpaDepth } from "@/native/backNavigation";
 
@@ -43,12 +44,14 @@ export function MobileLayout() {
   const navigate = useNavigate();
   const navType = useNavigationType();
   const mainRef = useRef<HTMLDivElement | null>(null);
-  const startYRef = useRef<number | null>(null);
-  const lastDeltaRef = useRef(0);
 
+  const [refreshKey, setRefreshKey] = useState(0);
   const [pullProgress, setPullProgress] = useState(0);
+  const [pullPixels, setPullPixels] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const refreshingRef = useRef(false);
+  const isPullingRef = useRef(false);
+  const pullProgressRef = useRef(0);
   const hideDock = location.pathname === "/check-in";
 
   useEffect(() => {
@@ -75,7 +78,6 @@ export function MobileLayout() {
     const id = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(reset);
     });
-    // Tell pages hooked with usePageRefresh to re-fetch immediately on tab change.
     window.dispatchEvent(new Event(VMS_PAGE_REFRESH_EVENT));
     return () => window.cancelAnimationFrame(id);
   }, [location.pathname, location.key]);
@@ -84,76 +86,98 @@ export function MobileLayout() {
     if (refreshingRef.current) return;
     refreshingRef.current = true;
     setRefreshing(true);
+    setPullPixels(54);
 
-    const el = mainRef.current;
-    if (el) el.scrollTop = 0;
+    // Light tactile feedback on trigger
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(18);
+      }
+    } catch {
+      /* ignore */
+    }
 
-    // Soft refresh: notify page loaders (no full remount / window.reload).
+    clearApiCache();
+    // Dispatch refresh event to all listeners
     window.dispatchEvent(new Event(VMS_PAGE_REFRESH_EVENT));
+    // Also bump refresh key to force subcomponent data re-fetch
+    setRefreshKey((prev) => prev + 1);
 
     window.setTimeout(() => {
       refreshingRef.current = false;
       setRefreshing(false);
-    }, 450);
+      setPullPixels(0);
+      setPullProgress(0);
+      pullProgressRef.current = 0;
+      isPullingRef.current = false;
+    }, 750);
   }, []);
 
   useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const scrollEl = el;
+    const scrollEl = mainRef.current;
+    if (!scrollEl) return;
 
-    const THRESHOLD_PX = 115;
+    let startY: number | null = null;
+    let isDragging = false;
 
-    function resetPull() {
-      startYRef.current = null;
-      lastDeltaRef.current = 0;
-      setPullProgress(0);
+    function handleStart(clientY: number) {
+      if (refreshingRef.current || !scrollEl) return;
+      if (scrollEl.scrollTop <= 6) {
+        startY = clientY;
+        isDragging = false;
+      } else {
+        startY = null;
+      }
     }
 
-    function onTouchStart(ev: TouchEvent) {
-      if (refreshingRef.current) return;
-      if (ev.touches.length !== 1) return;
-      if (scrollEl.scrollTop > 0) return;
-      startYRef.current = ev.touches[0].clientY;
-      lastDeltaRef.current = 0;
-      setPullProgress(0);
-    }
+    function handleMove(clientY: number, cancelable: boolean, prevent: () => void) {
+      if (refreshingRef.current || !scrollEl) return;
 
-    function onTouchMove(ev: TouchEvent) {
-      if (refreshingRef.current) return;
-      if (startYRef.current == null) return;
-      if (ev.touches.length !== 1) return;
-      if (scrollEl.scrollTop > 0) {
-        resetPull();
-        return;
+      if (startY === null && scrollEl.scrollTop <= 6) {
+        startY = clientY;
       }
 
-      const currentY = ev.touches[0].clientY;
-      const delta = currentY - startYRef.current;
-      lastDeltaRef.current = Math.max(0, delta);
+      if (startY !== null && scrollEl.scrollTop <= 6) {
+        const delta = clientY - startY;
+        if (delta > 4) {
+          if (cancelable) prevent();
+          isDragging = true;
+          isPullingRef.current = true;
+          const clamped = Math.min(160, delta);
+          const damped = Math.min(65, clamped * 0.44);
+          const progress = Math.min(1, damped / 36);
+          pullProgressRef.current = progress;
+          setPullPixels(damped);
+          setPullProgress(progress);
+        }
+      }
+    }
 
-      if (delta <= 0) {
+    function handleEnd() {
+      if (refreshingRef.current) return;
+      if (isDragging && pullProgressRef.current >= 0.6) {
+        doRefresh();
+      } else {
+        startY = null;
+        isDragging = false;
+        isPullingRef.current = false;
+        pullProgressRef.current = 0;
         setPullProgress(0);
-        return;
+        setPullPixels(0);
       }
-
-      // Only prevent default while the user is actively pulling down at the top.
-      ev.preventDefault();
-      const progress = Math.min(1, delta / THRESHOLD_PX);
-      setPullProgress(progress);
     }
 
-    function onTouchEnd() {
-      if (refreshingRef.current) {
-        resetPull();
-        return;
-      }
+    const onTouchStart = (ev: TouchEvent) => {
+      if (ev.touches.length === 1) handleStart(ev.touches[0].clientY);
+    };
 
-      const delta = lastDeltaRef.current;
-      const progress = delta / THRESHOLD_PX;
-      if (progress >= 0.65) doRefresh();
-      resetPull();
-    }
+    const onTouchMove = (ev: TouchEvent) => {
+      if (ev.touches.length === 1) {
+        handleMove(ev.touches[0].clientY, ev.cancelable, () => ev.preventDefault());
+      }
+    };
+
+    const onTouchEnd = () => handleEnd();
 
     scrollEl.addEventListener("touchstart", onTouchStart, { passive: true });
     scrollEl.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -168,6 +192,11 @@ export function MobileLayout() {
     };
   }, [doRefresh]);
 
+  const showIndicator = refreshing || pullProgress > 0.05;
+  const isReady = pullProgress >= 0.65;
+  const circumference = 56.54; // 2 * pi * 9
+  const strokeOffset = circumference * (1 - Math.min(1, pullProgress));
+
   return (
     <PageChromeProvider>
       <HostAlertProvider>
@@ -179,25 +208,61 @@ export function MobileLayout() {
             <AppTopBar />
           </div>
           <main className="m-content" id="vms-scroll-root" ref={mainRef}>
+            {/* Ultra Smooth iOS Pull-to-Refresh Floating Indicator */}
             <div
-              className="vm-pull-refresh-indicator"
+              className={`vm-pull-refresh-indicator${refreshing ? " is-refreshing" : ""}${isReady ? " is-ready" : ""}`}
               aria-hidden="true"
               style={{
-                opacity: refreshing ? 1 : pullProgress > 0 ? 1 : 0,
-                transform: `translateY(${pullProgress * 28}px)`,
+                opacity: showIndicator ? 1 : 0,
+                transform: `translateY(${Math.min(pullPixels, 58)}px) scale(${0.85 + Math.min(pullProgress, 1) * 0.15})`,
+                transition: refreshing || !isPullingRef.current ? "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease" : "none",
               }}
             >
-              {refreshing ? (
-                <span className="vm-pull-refresh-text">Refreshing…</span>
-              ) : (
+              <div className="vm-pull-refresh-pill">
+                <div className={`vm-pull-spinner-box${refreshing ? " is-active-spin" : ""}`}>
+                  <svg className="vm-pull-svg" viewBox="0 0 24 24" width="18" height="18">
+                    <circle
+                      className="vm-pull-svg-track"
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      className="vm-pull-svg-indicator"
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      strokeWidth="2.5"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={refreshing ? 14 : strokeOffset}
+                      strokeLinecap="round"
+                      style={{
+                        transform: `rotate(${pullProgress * 280}deg)`,
+                        transformOrigin: "center",
+                      }}
+                    />
+                  </svg>
+                </div>
                 <span className="vm-pull-refresh-text">
-                  {pullProgress >= 0.65 ? "Release to refresh" : "Pull to refresh"}
+                  {refreshing ? "Refreshing…" : isReady ? "Release to refresh" : "Pull down to refresh"}
                 </span>
-              )}
+              </div>
             </div>
 
-            {/* Remount on pathname so each tab mounts cleanly in Android WebView */}
-            <Outlet key={location.pathname} />
+            {/* Main Content with smooth spring motion */}
+            <div
+              className="vm-page-content-wrapper"
+              style={{
+                transform: `translateY(${refreshing ? 32 : pullPixels * 0.45}px)`,
+                transition: refreshing || !isPullingRef.current ? "transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)" : "none",
+              }}
+            >
+              {/* Remount on pathname and refreshKey so pull-to-refresh genuinely refreshes live data */}
+              <Outlet key={`${location.pathname}-${refreshKey}`} />
+            </div>
           </main>
           <FloatingNavbar />
         </div>

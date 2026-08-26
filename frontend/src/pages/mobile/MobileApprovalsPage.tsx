@@ -141,6 +141,9 @@ function parseApprovalsTab(raw: string | null): TabId {
   return "pending";
 }
 
+// Fast in-memory cache for instant 0ms tab navigation
+let cachedApprovalsRows: VisitorListRow[] | null = null;
+
 export function MobileApprovalsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -171,8 +174,8 @@ export function MobileApprovalsPage() {
   const [sortMode, setSortMode] = useState<SortMode>("desc");
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-  const [rows, setRows] = useState<VisitorListRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<VisitorListRow[]>(() => cachedApprovalsRows || []);
+  const [loading, setLoading] = useState<boolean>(() => !cachedApprovalsRows);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [rejectVisitor, setRejectVisitor] = useState<VisitorListRow | null>(null);
@@ -192,15 +195,21 @@ export function MobileApprovalsPage() {
     return () => document.removeEventListener("mousedown", onDocDown);
   }, [sortOpen]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (isSilent = false) => {
+    if (!isSilent && !cachedApprovalsRows) {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const list = await visitorApi.listDetailed(500, visitorScopeFilters(user));
-      setRows(list || []);
+      const list = await visitorApi.listDetailed(100, visitorScopeFilters(user));
+      const nextList = list || [];
+      cachedApprovalsRows = nextList;
+      setRows(nextList);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not load approvals");
-      setRows([]);
+      if (!cachedApprovalsRows) {
+        setError(err instanceof Error ? err.message : "Could not load approvals");
+        setRows([]);
+      }
     } finally {
       setLoading(false);
     }

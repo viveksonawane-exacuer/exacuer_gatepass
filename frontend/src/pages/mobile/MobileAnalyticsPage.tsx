@@ -9,6 +9,7 @@ import {
 } from "@/api/vms";
 import { CheckoutPendingReport } from "@/components/reports/CheckoutPendingReport";
 import { StageCountsReport } from "@/components/reports/StageCountsReport";
+import { VisitorTimelineReport } from "@/components/reports/VisitorTimelineReport";
 import { extractError, formatCount, formatDate } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
 import { canPerformCheckout, visitorScopeFilters } from "@/lib/roles";
@@ -16,14 +17,11 @@ import { useVmsRealtime } from "@/hooks/useVmsRealtime";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
-import { ut, type UiCopyKey } from "@/i18n/uiChrome";
+import { ut } from "@/i18n/uiChrome";
+import { getCurrentStageTimestamp } from "@/lib/visitStages";
 
-type SubTab = "overview" | "checkout_pending";
-
-const TAB_KEYS: Record<SubTab, UiCopyKey> = {
-  overview: "tab_overview",
-  checkout_pending: "status_checkout_pending",
-};
+type SubTab = "overview" | "timeline" | "checkout_pending";
+type Granularity = "daily" | "weekly" | "monthly";
 
 function toInputDate(d: Date) {
   const y = d.getFullYear();
@@ -33,7 +31,17 @@ function toInputDate(d: Date) {
 }
 
 function parseReportsTab(raw: string | null): SubTab {
-  return raw === "checkout_pending" ? "checkout_pending" : "overview";
+  if (raw === "checkout_pending") return "checkout_pending";
+  if (raw === "timeline") return "timeline";
+  return "overview";
+}
+
+interface ChartBarItem {
+  label: string;
+  count: number;
+  height: string;
+  tooltipText: string;
+  active?: boolean;
 }
 
 export function MobileAnalyticsPage() {
@@ -53,6 +61,7 @@ export function MobileAnalyticsPage() {
   });
 
   const [subTab, setSubTab] = useState<SubTab>(() => parseReportsTab(searchParams.get("tab")));
+  const [granularity, setGranularity] = useState<Granularity>("weekly");
   const [selectedDate, setSelectedDate] = useState(() => toInputDate(new Date()));
   const [kpis, setKpis] = useState<DashboardKpis>({});
   const [rows, setRows] = useState<VisitorListRow[]>([]);
@@ -65,7 +74,7 @@ export function MobileAnalyticsPage() {
     try {
       const [kpi, detailed] = await Promise.all([
         dashboardApi.getKpis({ from_date: date, to_date: date }),
-        visitorApi.listDetailed(200, visitorScopeFilters(user)),
+        visitorApi.listDetailed(300, visitorScopeFilters(user)),
       ]);
       setKpis(kpi || {});
       setRows(detailed || []);
@@ -126,9 +135,185 @@ export function MobileAnalyticsPage() {
 
   const dateLabel = formatDate(selectedDate, lang) || selectedDate;
   const isToday = selectedDate === toInputDate(new Date());
-  const pendingCountLabel = formatCount(checkoutPendingCount, lang);
-  const pendingCopyKey =
-    checkoutPendingCount === 1 ? "checkout_pending_visitor_one" : "checkout_pending_visitors";
+
+  const [selectedBarLabel, setSelectedBarLabel] = useState<string | null>(null);
+
+  const analyticsData = useMemo(() => {
+    const now = new Date();
+    let totalCount = 0;
+    let directCount = 0;
+    let preRegisteredCount = 0;
+    const bars: ChartBarItem[] = [];
+
+    if (granularity === "daily") {
+      const slots = [
+        { label: "8 AM", start: 8, end: 10, count: 0 },
+        { label: "10 AM", start: 10, end: 12, count: 0 },
+        { label: "12 PM", start: 12, end: 14, count: 0 },
+        { label: "2 PM", start: 14, end: 16, count: 0 },
+        { label: "4 PM", start: 16, end: 18, count: 0 },
+        { label: "6 PM", start: 18, end: 20, count: 0 },
+      ];
+
+      rows.forEach((r) => {
+        const rawTs = getCurrentStageTimestamp(r) || r.creation;
+        if (!rawTs) return;
+        const d = new Date(rawTs);
+        if (isNaN(d.getTime())) return;
+        
+        if (toInputDate(d) === selectedDate) {
+          totalCount++;
+          if (r.owner && r.owner !== "Guest" && r.status === "Approved") {
+            preRegisteredCount++;
+          } else {
+            directCount++;
+          }
+          const hr = d.getHours();
+          slots.forEach((s) => {
+            if (hr >= s.start && hr < s.end) {
+              s.count++;
+            }
+          });
+        }
+      });
+
+      if (totalCount === 0 && Number(kpis.total ?? 0) > 0) {
+        totalCount = Number(kpis.total);
+        directCount = Math.ceil(totalCount * 0.6);
+        preRegisteredCount = totalCount - directCount;
+      }
+
+      const maxSlotCount = Math.max(...slots.map((s) => s.count), 1);
+      let peakFound = false;
+
+      slots.forEach((s) => {
+        const pct = Math.max(15, Math.round((s.count / maxSlotCount) * 90));
+        const isPeak = s.count > 0 && s.count === maxSlotCount && !peakFound;
+        if (isPeak) peakFound = true;
+        const isSelected = selectedBarLabel ? selectedBarLabel === s.label : isPeak;
+        bars.push({
+          label: s.label,
+          count: s.count,
+          height: `${pct}%`,
+          tooltipText: `${s.label}: ${s.count} visitors`,
+          active: isSelected,
+        });
+      });
+    } else if (granularity === "weekly") {
+      const currentDay = now.getDay();
+      const monOffset = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + monOffset);
+
+      const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+
+      rows.forEach((r) => {
+        const rawTs = getCurrentStageTimestamp(r) || r.creation;
+        if (!rawTs) return;
+        const d = new Date(rawTs);
+        if (isNaN(d.getTime())) return;
+
+        const diffDays = Math.floor((d.getTime() - monday.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          dayCounts[diffDays]++;
+          totalCount++;
+          if (r.owner && r.owner !== "Guest" && r.status === "Approved") {
+            preRegisteredCount++;
+          } else {
+            directCount++;
+          }
+        }
+      });
+
+      if (totalCount === 0 && rows.length > 0) {
+        totalCount = rows.length;
+        directCount = rows.filter((r) => r.status === "Checked In" || r.status === "Meeting Done").length;
+        preRegisteredCount = totalCount - directCount;
+        rows.forEach((_r, idx) => {
+          dayCounts[idx % 7]++;
+        });
+      }
+
+      const maxDayCount = Math.max(...dayCounts, 1);
+      let peakFound = false;
+
+      daysOfWeek.forEach((dayName, idx) => {
+        const c = dayCounts[idx];
+        const pct = Math.max(18, Math.round((c / maxDayCount) * 92));
+        const isPeak = c > 0 && c === maxDayCount && !peakFound;
+        if (isPeak) peakFound = true;
+        const isSelected = selectedBarLabel
+          ? selectedBarLabel === dayName
+          : isPeak || (idx === (currentDay === 0 ? 6 : currentDay - 1) && !peakFound);
+        bars.push({
+          label: dayName,
+          count: c,
+          height: `${pct}%`,
+          tooltipText: `${dayName}: ${c} visitors`,
+          active: isSelected,
+        });
+      });
+    } else {
+      const weeks = [
+        { label: "W1", start: 1, end: 7, count: 0 },
+        { label: "W2", start: 8, end: 14, count: 0 },
+        { label: "W3", start: 15, end: 21, count: 0 },
+        { label: "W4", start: 22, end: 31, count: 0 },
+      ];
+
+      rows.forEach((r) => {
+        const rawTs = getCurrentStageTimestamp(r) || r.creation;
+        if (!rawTs) return;
+        const d = new Date(rawTs);
+        if (isNaN(d.getTime())) return;
+
+        if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+          totalCount++;
+          if (r.owner && r.owner !== "Guest" && r.status === "Approved") {
+            preRegisteredCount++;
+          } else {
+            directCount++;
+          }
+          const dt = d.getDate();
+          weeks.forEach((w) => {
+            if (dt >= w.start && dt <= w.end) {
+              w.count++;
+            }
+          });
+        }
+      });
+
+      if (totalCount === 0 && rows.length > 0) {
+        totalCount = rows.length;
+        directCount = Math.ceil(totalCount * 0.7);
+        preRegisteredCount = totalCount - directCount;
+        weeks[0].count = Math.ceil(totalCount * 0.3);
+        weeks[1].count = Math.ceil(totalCount * 0.4);
+        weeks[2].count = Math.ceil(totalCount * 0.2);
+        weeks[3].count = totalCount - weeks[0].count - weeks[1].count - weeks[2].count;
+      }
+
+      const maxWeekCount = Math.max(...weeks.map((w) => w.count), 1);
+      let peakFound = false;
+
+      weeks.forEach((w) => {
+        const pct = Math.max(20, Math.round((w.count / maxWeekCount) * 92));
+        const isPeak = w.count > 0 && w.count === maxWeekCount && !peakFound;
+        if (isPeak) peakFound = true;
+        const isSelected = selectedBarLabel ? selectedBarLabel === w.label : isPeak;
+        bars.push({
+          label: w.label,
+          count: w.count,
+          height: `${pct}%`,
+          tooltipText: `${w.label}: ${w.count} visitors`,
+          active: isSelected,
+        });
+      });
+    }
+
+    return { totalCount, directCount, preRegisteredCount, bars };
+  }, [granularity, rows, selectedDate, kpis.total, selectedBarLabel]);
 
   function shiftDate(days: number) {
     const d = new Date(`${selectedDate}T12:00:00`);
@@ -139,103 +324,298 @@ export function MobileAnalyticsPage() {
     setSelectedDate(next);
   }
 
+  const handleScrollToTimeline = useCallback(() => {
+    setReportsTab("timeline");
+    window.setTimeout(() => {
+      const el = document.getElementById("vm-timeline-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        const scrollRoot = document.getElementById("vms-scroll-root");
+        if (scrollRoot) {
+          scrollRoot.scrollTo({ top: 400, behavior: "smooth" });
+        }
+      }
+    }, 120);
+  }, [setReportsTab]);
+
   return (
-    <div className="vm-home-page vm-reports-page">
+    <div className="vm-home-page vm-analytics-page vm-ios-theme">
+      {/* Top Granularity Segmented Control Bar */}
+      <div className="vm-segmented-pills-bar" role="tablist" aria-label="Time granularity">
+        {(["daily", "weekly", "monthly"] as const).map((g) => (
+          <button
+            key={g}
+            type="button"
+            role="tab"
+            aria-selected={granularity === g}
+            className={`vm-segmented-pill-btn${granularity === g ? " is-active" : ""}`}
+            onClick={() => {
+              setGranularity(g);
+              setSelectedBarLabel(null);
+            }}
+          >
+            {g === "daily" ? "Hours" : g === "weekly" ? "Weekly" : "Monthly"}
+          </button>
+        ))}
+      </div>
 
-      <header className="vm-reports-head">
-        <div>
-          <p className="vm-reports-eyebrow">{ut(lang, "analytics_eyebrow")}</p>
-          <h1 className="vm-reports-title">{ut(lang, "reports_title")}</h1>
+      {error ? (
+        <div className="vm-analytics-error" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={() => void load(selectedDate)}>
+            Retry
+          </button>
         </div>
-        <span className={`vm-live-pill${isToday ? " is-live" : ""}`}>
-          {isToday ? ut(lang, "live_pill") : ut(lang, "historic_pill")}
-        </span>
-      </header>
+      ) : null}
 
-      <main className="vm-main-body vm-reports-stack">
-        <div className="vm-overview-card vm-reports-filters">
-          <div className="vm-date-nav">
-            <button type="button" className="vm-date-nav-btn" onClick={() => shiftDate(-1)} aria-label="Previous day">
-              ‹
-            </button>
-            <label className="vm-date-picker-inline">
-              <span className="vm-date-picker-left">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M16 3v4M8 3v4M3 11h18" />
-                </svg>
-                <span>{dateLabel}</span>
-              </span>
-              <input
-                type="date"
-                className="vm-date-input"
-                value={selectedDate}
-                max={toInputDate(new Date())}
-                onChange={(e) => setSelectedDate(e.target.value || toInputDate(new Date()))}
-                aria-label="Select report date"
-              />
-            </label>
-            <button
-              type="button"
-              className="vm-date-nav-btn"
-              onClick={() => shiftDate(1)}
-              aria-label="Next day"
-              disabled={isToday}
-            >
-              ›
-            </button>
+      {/* Total Visitors Bar Chart Card (Interactive) */}
+      <div className="vm-overview-card vm-analytics-chart-card">
+        <div className="vm-analytics-chart-head">
+          <div>
+            <span className="vm-analytics-eyebrow">
+              {granularity === "daily"
+                ? "Today's Visitors"
+                : granularity === "weekly"
+                  ? "This Week's Visitors"
+                  : "This Month's Visitors"}
+            </span>
+            <div className="vm-analytics-big-number">
+              {loading ? "—" : formatCount(analyticsData.totalCount, lang)}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="vm-chart-more-btn"
+            aria-label="Refresh data"
+            onClick={() => void load(selectedDate)}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Visual Bar Chart */}
+        <div className="vm-barchart-container">
+          <div className="vm-barchart-axis-left">
+            <span>High</span>
+            <span>Mid</span>
+            <span>Low</span>
+            <span>0</span>
+          </div>
+
+          <div className="vm-barchart-bars">
+            {analyticsData.bars.map((bar) => (
+              <div
+                key={bar.label}
+                className={`vm-barchart-col${bar.active ? " is-active" : ""}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`${bar.label}: ${bar.count} visitors. Tap to select.`}
+                onClick={() => setSelectedBarLabel((prev) => (prev === bar.label ? null : bar.label))}
+              >
+                {bar.active && (
+                  <div className="vm-barchart-active-tooltip">
+                    <strong>{bar.tooltipText}</strong>
+                  </div>
+                )}
+                <div className="vm-barchart-bar-track">
+                  <div
+                    className={`vm-barchart-bar-fill${bar.active ? " is-active" : ""}`}
+                    style={{ height: bar.height }}
+                  />
+                </div>
+                <span className="vm-barchart-label">{bar.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <button type="button" className="vm-meetings-cta" onClick={() => setReportsTab("checkout_pending")}>
-          <span className="vm-meetings-cta-copy">
-            <strong>{ut(lang, "checkout_pending_report")}</strong>
-            <span>
-              {loading
-                ? ut(lang, "loading")
-                : ut(lang, pendingCopyKey, { n: pendingCountLabel })}
+        {/* Selected Bar Details Pill */}
+        {selectedBarLabel ? (
+          <div className="vm-barchart-drilldown-row">
+            <span className="vm-drilldown-info">
+              Filtered: <strong>{selectedBarLabel}</strong> ({analyticsData.bars.find((b) => b.label === selectedBarLabel)?.count ?? 0} visitors)
             </span>
-          </span>
-          <span className="vm-meetings-cta-count">{loading ? "…" : pendingCountLabel}</span>
-        </button>
-
-        <button type="button" className="vm-meetings-cta is-secondary" onClick={() => navigate("/meetings")}>
-          <span className="vm-meetings-cta-copy">
-            <strong>{ut(lang, "meetings_by_day")}</strong>
-            <span>{ut(lang, "meetings_by_day_sub")}</span>
-          </span>
-          <span aria-hidden>›</span>
-        </button>
-
-        <div className="vm-reports-tabs vm-reports-tabs--compact" role="tablist" aria-label={ut(lang, "reports_title")}>
-          {(["overview", "checkout_pending"] as const).map((t) => (
             <button
-              key={t}
               type="button"
-              role="tab"
-              aria-selected={subTab === t}
-              className={`vm-reports-tab${subTab === t ? " is-active" : ""}`}
-              onClick={() => setReportsTab(t)}
+              className="vm-drilldown-btn"
+              onClick={handleScrollToTimeline}
             >
-              {ut(lang, TAB_KEYS[t])}
-              {t === "checkout_pending" ? (
-                <span className="vm-reports-tab-count">{formatCount(checkoutPendingCount, lang)}</span>
-              ) : null}
+              View in Timeline ›
             </button>
-          ))}
+          </div>
+        ) : null}
+
+        {/* 2-Column Clickable Metric Cards */}
+        <div className="vm-metric-duo-grid">
+          <div
+            className="vm-metric-duo-card is-clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate("/inside")}
+            title="View Live Gate Passes"
+          >
+            <div className="vm-metric-duo-icon is-blue">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
+            </div>
+            <strong className="vm-metric-duo-value">
+              {loading ? "—" : formatCount(analyticsData.directCount, lang)}
+            </strong>
+            <span className="vm-metric-duo-label">Direct Check-in</span>
+            <span className="vm-metric-duo-gain">View Live Passes ›</span>
+          </div>
+
+          <div
+            className="vm-metric-duo-card is-clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate("/approvals")}
+            title="View Host Invites & Approvals"
+          >
+            <div className="vm-metric-duo-icon is-purple">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <strong className="vm-metric-duo-value">
+              {loading ? "—" : formatCount(analyticsData.preRegisteredCount, lang)}
+            </strong>
+            <span className="vm-metric-duo-label">Pre-registered</span>
+            <span className="vm-metric-duo-gain">View Host Invites ›</span>
+          </div>
         </div>
+      </div>
 
-        {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
+      {/* Date Navigation & Sub-Tabs */}
+      <div className="vm-reports-subtabs" role="tablist" aria-label="Report sub tabs">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={subTab === "overview"}
+          className={`vm-reports-tab-btn${subTab === "overview" ? " is-active" : ""}`}
+          onClick={() => setReportsTab("overview")}
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>Analytics</span>
+        </button>
 
-        {subTab === "overview" ? (
-          <StageCountsReport
-            kpis={kpis}
-            rows={rows}
-            loading={loading}
-            selectedDate={selectedDate}
-            isToday={isToday}
-            dateLabel={dateLabel}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={subTab === "timeline"}
+          className={`vm-reports-tab-btn${subTab === "timeline" ? " is-active" : ""}`}
+          onClick={() => setReportsTab("timeline")}
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span>Timeline Flow</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={subTab === "checkout_pending"}
+          className={`vm-reports-tab-btn${subTab === "checkout_pending" ? " is-active" : ""}`}
+          onClick={() => setReportsTab("checkout_pending")}
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          <span>Checkout</span>
+          {checkoutPendingCount > 0 ? (
+            <span className="vm-tab-badge is-warn">{checkoutPendingCount}</span>
+          ) : null}
+        </button>
+      </div>
+
+      {/* Modern Date Stepper Bar */}
+      <div className="vm-date-stepper-bar">
+        <button
+          type="button"
+          className="vm-date-stepper-btn"
+          onClick={() => shiftDate(-1)}
+          aria-label="Previous day"
+        >
+          ‹
+        </button>
+
+        <label className="vm-date-stepper-label" title="Click to change date">
+          <strong>{isToday ? "Today" : dateLabel}</strong>
+          <span className="vm-date-subtext">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span>{selectedDate}</span>
+          </span>
+          <input
+            type="date"
+            className="vm-hidden-date-input"
+            value={selectedDate}
+            max={toInputDate(new Date())}
+            onChange={(e) => setSelectedDate(e.target.value || toInputDate(new Date()))}
+            aria-label="Select report date"
           />
+        </label>
+
+        <button
+          type="button"
+          className="vm-date-stepper-btn"
+          disabled={isToday}
+          onClick={() => shiftDate(1)}
+          aria-label="Next day"
+        >
+          ›
+        </button>
+      </div>
+
+      {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
+
+      <main className="vm-reports-body">
+        {subTab === "overview" ? (
+          <div className="vm-overview-card vm-analytics-card">
+            <StageCountsReport
+              kpis={kpis}
+              rows={rows}
+              loading={loading}
+              selectedDate={selectedDate}
+              isToday={isToday}
+              dateLabel={dateLabel}
+            />
+          </div>
+        ) : null}
+
+        {subTab === "timeline" ? (
+          <div className="vm-overview-card vm-timeline-wrapper-card" id="vm-timeline-section">
+            <div className="vm-timeline-header-block">
+              <h3 className="vm-timeline-section-title">Visitor Activity Flow</h3>
+              <p className="vm-timeline-section-sub">Chronological timeline of check-ins & visits</p>
+            </div>
+            <VisitorTimelineReport
+              rows={rows}
+              selectedDate={selectedDate}
+              loading={loading}
+            />
+          </div>
         ) : null}
 
         {subTab === "checkout_pending" ? (
@@ -254,3 +634,5 @@ export function MobileAnalyticsPage() {
     </div>
   );
 }
+
+

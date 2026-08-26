@@ -6,6 +6,7 @@ import { formatTime } from "@/lib/format";
 import { resolveMode } from "@/lib/roles";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 export function MobilePassPage() {
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ export function MobilePassPage() {
       setLoading(false);
     }
   }, [mobile]);
+
+  usePageRefresh(loadMine);
 
   useEffect(() => {
     if (mode === "visitor" || mode === "host" || mode === "security") {

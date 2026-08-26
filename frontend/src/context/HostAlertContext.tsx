@@ -185,33 +185,31 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
     (payload: HostAlertPayload) => {
       const visitorEntry = payload.visitor_entry;
       if (!visitorEntry) return;
+
+      // STRICT RULE 1: Host only receives Pending Approval alerts
+      const isPending =
+        payload.status === "Pending Approval" ||
+        payload.status === "Pending" ||
+        payload.lifecycle_event === "host_notified" ||
+        payload.lifecycle_event === "created" ||
+        payload.lifecycle_event === "transferred" ||
+        payload.event === "host_notified" ||
+        payload.event === "created" ||
+        payload.event === "transferred" ||
+        (payload.message || "").toLowerCase().includes("waiting") ||
+        (payload.message || "").toLowerCase().includes("approval");
+
+      if (!isPending) {
+        // Suppress checkin, checkout, approved, rejected, meeting done from host popup
+        return;
+      }
+
       if (withinRingCooldown(`host:${visitorEntry}`)) return;
 
       const visitorName = payload.visitor_name || visitorEntry;
       const message = payload.message || `${visitorName} is waiting for your approval at the gate.`;
       const hostName = payload.host || "Host";
-
-      const isCheckedIn =
-        payload.lifecycle_event === "checked_in" ||
-        payload.event === "checked_in" ||
-        payload.status === "Checked In" ||
-        (payload.message || "").toLowerCase().includes("checked in");
-      const isCheckedOut =
-        payload.lifecycle_event === "checked_out" ||
-        payload.event === "checked_out" ||
-        payload.status === "Checked Out" ||
-        (payload.message || "").toLowerCase().includes("checked out");
-      const isCancelled =
-        payload.lifecycle_event === "cancelled" ||
-        payload.event === "cancelled" ||
-        payload.status === "Cancelled";
-      const title = isCancelled
-        ? "Visit cancelled"
-        : isCheckedOut
-          ? "Visitor checked out"
-          : isCheckedIn
-            ? "Visitor checked in"
-            : "Visitor waiting at gate";
+      const title = "Visitor waiting for approval";
 
       const alert: ActiveHostAlert = {
         visitorEntry,
@@ -235,10 +233,7 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
       void requestNotificationPermission();
       startHostAlertRing();
       void pushHostAlertNotification(visitorEntry, title, message, 0, routeForHostAlert(alert));
-
-      if (!isCheckedIn && !isCheckedOut && !isCancelled) {
-        startHostAlertReminders(alert, onReminderTick);
-      }
+      startHostAlertReminders(alert, onReminderTick);
     },
     [onReminderTick, withinRingCooldown],
   );
@@ -287,14 +282,37 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
       const visitorEntry = payload.visitor_entry;
       if (!visitorEntry) return;
 
+      // STRICT RULE 2: Security guard receives Check-in and Check-out alerts
+      const subLower = (payload.message || "").toLowerCase();
+      const event = payload.lifecycle_event || payload.event || "";
+      const status = payload.status || "";
+
+      const isCheckIn =
+        event === "checked_in" || status === "Checked In" || subLower.includes("checked in");
+      const isCheckOut =
+        event === "checked_out" ||
+        event === "security_checkout_required" ||
+        status === "Checked Out" ||
+        status === "Meeting Done" ||
+        subLower.includes("checked out") ||
+        subLower.includes("checkout");
+
+      if (!isCheckIn && !isCheckOut) {
+        return;
+      }
+
       const now = Date.now();
       const lastAt = securityAlertCooldownRef.current[visitorEntry] || 0;
       if (now - lastAt < 2500) return;
       securityAlertCooldownRef.current[visitorEntry] = now;
 
       const visitorName = payload.visitor_name || visitorEntry;
+      const title = isCheckIn ? "Visitor Checked In" : "Visitor Checked Out";
       const message =
-        payload.message || `${visitorName} has completed the meeting. Proceed with gate checkout.`;
+        payload.message ||
+        (isCheckIn
+          ? `${visitorName} has checked in at the gate.`
+          : `${visitorName} has checked out at the gate.`);
       const hostName = payload.host || "Host";
 
       const alert: ActiveHostAlert = {
@@ -305,7 +323,7 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
         receivedAt: Date.now(),
         reminderCount: 0,
         variant: "security",
-        title: "Visitor ready for checkout",
+        title,
       };
 
       setSuppressedEntries((prev) => {
@@ -318,11 +336,9 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
 
       void requestNotificationPermission();
       startHostAlertRing();
-      void pushHostAlertNotification(visitorEntry, "Visitor ready for checkout", message, 0, routeForHostAlert(alert));
-
-      startHostAlertReminders(alert, onReminderTick);
+      void pushHostAlertNotification(visitorEntry, title, message, 0, routeForHostAlert(alert));
     },
-    [onReminderTick],
+    [],
   );
 
   useVmsRealtimeEvent<HostAlertPayload>(
@@ -366,17 +382,12 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
 
       // Clear previous ring when status moves past that recipient's job.
       if (event === "approved" || event === "rejected" || event === "meeting_done") {
-        if (payloadTargetsCurrentCreator(payload, user)) return;
         if (payloadTargetsCurrentHost(payload, user)) {
           clearAlert(visitorEntry);
         }
         return;
       }
       if (event === "checked_out") {
-        clearAlert(visitorEntry);
-        return;
-      }
-      if (event === "transferred" && payloadTargetsCurrentHost(payload, user)) {
         clearAlert(visitorEntry);
       }
     },
@@ -440,39 +451,60 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.user]);
 
-  // Periodic fallback sync: ensures unread host alerts always trigger the ring popup
+  // Auto-sync unread alerts from backend Notification Log on login / reconnect
   useEffect(() => {
-    if (!user?.authenticated || !user?.user) return;
+    if (!user?.authenticated || (!receivesHostAlerts && mode !== "security")) return;
 
-    let cancelled = false;
+    let mounted = true;
     const syncLatestAlerts = async () => {
-      if (document.visibilityState === "hidden") return;
       try {
         const notifs = await notificationApi.list(10);
-        if (cancelled || !Array.isArray(notifs)) return;
+        if (!mounted || !notifs || !notifs.length) return;
 
         const unreadAlert = notifs.find((n) => {
           if (n.read) return false;
           const sub = (n.subject || "").toLowerCase();
           const body = (n.email_content || "").toLowerCase();
-          return (
-            (n.document_type === "Visitor Entry" || Boolean(n.document_name)) &&
-            (sub.includes("waiting") ||
-              sub.includes("approval") ||
-              sub.includes("check in") ||
+
+          if (mode === "security") {
+            return (
               sub.includes("checked in") ||
-              sub.includes("check out") ||
-              sub.includes("checked out") ||
-              body.includes("waiting") ||
-              body.includes("approval") ||
-              body.includes("check in") ||
               body.includes("checked in") ||
+              sub.includes("check in") ||
+              body.includes("check in") ||
+              sub.includes("checked out") ||
+              body.includes("checked out") ||
+              sub.includes("check out") ||
               body.includes("check out") ||
-              body.includes("checked out"))
-          );
+              sub.includes("checkout") ||
+              body.includes("checkout")
+            );
+          }
+
+          if (mode === "host") {
+            const isCheckout = sub.includes("check out") || sub.includes("checked out") || body.includes("check out") || body.includes("checked out");
+            const isCheckIn = sub.includes("check in") || sub.includes("checked in") || body.includes("check in") || body.includes("checked in");
+            if (isCheckout || isCheckIn) return false;
+
+            return (
+              (n.document_type === "Visitor Entry" || Boolean(n.document_name)) &&
+              (sub.includes("waiting") ||
+                sub.includes("approval") ||
+                sub.includes("pending") ||
+                body.includes("waiting") ||
+                body.includes("approval") ||
+                body.includes("pending"))
+            );
+          }
+
+          return false;
         });
 
         if (unreadAlert && unreadAlert.document_name) {
+          if (unreadAlert.name) {
+            void notificationApi.markRead(unreadAlert.name).catch(() => {});
+          }
+
           const entryName = unreadAlert.document_name;
           if (seenAlertsRef.current.has(entryName)) return;
           seenAlertsRef.current.add(entryName);
@@ -481,26 +513,34 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
           const body = unreadAlert.email_content || subject;
           const subLower = subject.toLowerCase();
           const bodyLower = body.toLowerCase();
-          const isCheckedIn = subLower.includes("checked in") || bodyLower.includes("checked in");
-          const isCheckedOut = subLower.includes("checked out") || bodyLower.includes("checked out");
-          const eventName = isCheckedOut ? "checked_out" : isCheckedIn ? "checked_in" : "host_notified";
-          const statusName = isCheckedOut ? "Checked Out" : isCheckedIn ? "Checked In" : "Pending Approval";
 
           const visitorName =
             body.replace(/^Visitor\s+/i, "").split(/\s+(?:is|has)\s+/i)[0]?.trim() ||
             subject.replace(/^Visitor\s+/i, "").split(/\s+(?:waiting|checked)/i)[0]?.trim() ||
             entryName;
 
-          registerAlert({
-            visitor_entry: entryName,
-            visitor_name: visitorName,
-            message: body,
-            host: user.full_name || user.user || undefined,
-            host_user: user.user || undefined,
-            lifecycle_event: eventName,
-            event: eventName,
-            status: statusName,
-          });
+          if (mode === "security") {
+            const isCheckIn = subLower.includes("checked in") || bodyLower.includes("checked in") || subLower.includes("check in");
+            registerSecurityAlert({
+              visitor_entry: entryName,
+              visitor_name: visitorName,
+              message: body,
+              status: isCheckIn ? "Checked In" : "Checked Out",
+              lifecycle_event: isCheckIn ? "checked_in" : "checked_out",
+              event: isCheckIn ? "checked_in" : "checked_out",
+            });
+          } else if (mode === "host") {
+            registerAlert({
+              visitor_entry: entryName,
+              visitor_name: visitorName,
+              message: body,
+              host: user.full_name || user.user || undefined,
+              host_user: user.user || undefined,
+              lifecycle_event: "host_notified",
+              event: "host_notified",
+              status: "Pending Approval",
+            });
+          }
         }
       } catch {
         /* best-effort background sync */
@@ -510,13 +550,13 @@ export function HostAlertProvider({ children }: { children: ReactNode }) {
     void syncLatestAlerts();
     const interval = window.setInterval(() => {
       void syncLatestAlerts();
-    }, 3500);
+    }, 4500);
 
     return () => {
-      cancelled = true;
+      mounted = false;
       window.clearInterval(interval);
     };
-  }, [user, registerAlert]);
+  }, [user, registerAlert, registerSecurityAlert, receivesHostAlerts, mode]);
 
   useEffect(() => {
     return () => {

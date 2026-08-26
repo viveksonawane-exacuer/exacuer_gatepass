@@ -6,6 +6,12 @@ import {
   type InAppNotification,
   type VisitorListRow,
 } from "@/api/vms";
+import {
+  getSavedNotifications,
+  markAllSavedNotificationsRead,
+  markSavedNotificationRead,
+  type SavedInAppNotification,
+} from "@/services/localNotificationHistory";
 import { VisitorAvatar } from "@/components/ui/VisitorAvatar";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAuth } from "@/context/AuthContext";
@@ -32,6 +38,7 @@ export function MobileNotificationsPage() {
   const { user } = useAuth();
   const [pending, setPending] = useState<VisitorListRow[]>([]);
   const [alerts, setAlerts] = useState<InAppNotification[]>([]);
+  const [savedAlerts, setSavedAlerts] = useState<SavedInAppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
 
@@ -53,9 +60,11 @@ export function MobileNotificationsPage() {
       ]);
       setPending((visitors || []).filter((row) => isPendingStatus(row.status)));
       setAlerts(logs || []);
+      setSavedAlerts(getSavedNotifications());
     } catch {
       setPending([]);
       setAlerts([]);
+      setSavedAlerts(getSavedNotifications());
     } finally {
       setLoading(false);
     }
@@ -64,6 +73,14 @@ export function MobileNotificationsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const handler = () => {
+      setSavedAlerts(getSavedNotifications());
+    };
+    window.addEventListener("vms-notifications-updated", handler);
+    return () => window.removeEventListener("vms-notifications-updated", handler);
+  }, []);
 
   usePageRefresh(load);
 
@@ -81,8 +98,15 @@ export function MobileNotificationsPage() {
     [alerts],
   );
 
+  const unreadSaved = useMemo(
+    () => savedAlerts.filter((item) => !item.read).length,
+    [savedAlerts],
+  );
+
   const markAllRead = async () => {
     setReadIds(new Set(pending.map((item) => item.name)));
+    markAllSavedNotificationsRead();
+    setSavedAlerts((prev) => prev.map((s) => ({ ...s, read: true })));
     try {
       await notificationApi.markAllRead();
       setAlerts((prev) => prev.map((row) => ({ ...row, read: 1 })));
@@ -94,6 +118,16 @@ export function MobileNotificationsPage() {
   const openPending = (item: VisitorListRow) => {
     setReadIds((prev) => new Set(prev).add(item.name));
     navigate("/approvals");
+  };
+
+  const openSavedAlert = (item: SavedInAppNotification) => {
+    markSavedNotificationRead(item.id);
+    setSavedAlerts((prev) => prev.map((s) => (s.id === item.id ? { ...s, read: true } : s)));
+    if (item.route) {
+      navigate(item.route);
+    } else {
+      navigate("/approvals");
+    }
   };
 
   const openAlert = async (item: InAppNotification) => {
@@ -110,7 +144,7 @@ export function MobileNotificationsPage() {
     navigate(alertRoute(item));
   };
 
-  const showMarkAll = pending.length > 0 && unreadPending > 0 || unreadAlerts > 0;
+  const showMarkAll = (pending.length > 0 && unreadPending > 0) || unreadAlerts > 0 || unreadSaved > 0;
 
   return (
     <div className="vm-home-page vm-notif-page">
@@ -185,11 +219,50 @@ export function MobileNotificationsPage() {
               </div>
             )}
 
+            {savedAlerts.length > 0 ? (
+              <section className="vm-notif-alerts-section" aria-label="In-app alerts">
+                <div className="vm-notif-page-toolbar vm-notif-alerts-toolbar">
+                  <div className="vm-notif-page-summary">
+                    <strong>In-App & Confirmation Alerts</strong>
+                    <span className="vm-notif-popup-count">{savedAlerts.length}</span>
+                  </div>
+                </div>
+                <div className="vm-notif-page-card">
+                  <ul className="vm-notif-list" role="list">
+                    {savedAlerts.map((item) => {
+                      const isUnread = !item.read;
+                      return (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            className={`vm-notif-row${isUnread ? " is-unread" : " is-read"}`}
+                            onClick={() => openSavedAlert(item)}
+                          >
+                            <div className="vm-notif-alert-icon" aria-hidden>
+                              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                              </svg>
+                            </div>
+                            <div className="vm-notif-copy">
+                              <strong>{item.title}</strong>
+                              <span>{item.message || "Visitor check-in / update"}</span>
+                            </div>
+                            <span className="vm-notif-time">{formatTime(new Date(item.timestamp)) || "—"}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </section>
+            ) : null}
+
             {alerts.length > 0 ? (
               <section className="vm-notif-alerts-section" aria-label="Recent alerts">
                 <div className="vm-notif-page-toolbar vm-notif-alerts-toolbar">
                   <div className="vm-notif-page-summary">
-                    <strong>Recent Alerts</strong>
+                    <strong>Recent System Alerts</strong>
                     <span className="vm-notif-popup-count">{alerts.length}</span>
                   </div>
                 </div>

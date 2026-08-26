@@ -177,6 +177,7 @@ const routeElements = createRoutesFromElements(
             <Route path="/my-pass" element={<MobilePassPage />} />
             <Route path="/pass" element={<MobilePassPage />} />
             <Route path="/profile" element={<MobileProfilePage />} />
+            <Route path="/settings" element={<MobileProfilePage />} />
           </Route>
 
           <Route element={<RequireCapability capability="notifications" />}>

@@ -12,115 +12,59 @@ type VisitorListRowCardProps = {
   item: VisitorListRow;
   index?: number;
   onOpen: (item: VisitorListRow) => void;
-  /** History: only stages with timestamps (completed tracking). */
   timelineFilledOnly?: boolean;
-  /** Show Visitor Entry id under the name. */
   showEntryId?: boolean;
 };
 
-type ListBadgeIcon = "in" | "checkout" | "pending" | "approved" | "out" | "transferred" | "rejected" | "default";
-
-type ListBadge = {
-  text: string;
-  className: string;
-  icon: ListBadgeIcon;
-};
-
-function avatarTone(status?: string, idx = 0) {
-  if (status === "Pending Approval") return "orange";
-  if (status === "Approved") return "blue";
-  if (status === "Checked Out") return "purple";
-  if (status === "Rejected") return "orange";
-  return (["green", "blue", "purple", "orange"] as const)[idx % 4];
-}
-
-function resolveListBadgeStyle(status?: string, transferred?: boolean): Omit<ListBadge, "text"> {
-  if (transferred) {
-    return { className: "vm-visitor-list-badge is-transferred", icon: "transferred" };
-  }
-  if (status === "Pending Approval") {
-    return { className: "vm-visitor-list-badge is-pending", icon: "pending" };
-  }
-  if (status === "Approved") {
-    return { className: "vm-visitor-list-badge is-approved", icon: "approved" };
-  }
-  if (status === "Checked Out") {
-    return { className: "vm-visitor-list-badge is-out", icon: "out" };
-  }
-  if (status === "Meeting Done") {
-    return { className: "vm-visitor-list-badge is-checkout", icon: "checkout" };
-  }
-  if (status === "Checked In") {
-    return { className: "vm-visitor-list-badge is-in", icon: "in" };
-  }
-  if (status === "Rejected") {
-    return { className: "vm-visitor-list-badge is-rejected", icon: "rejected" };
-  }
-  return {
-    className: "vm-visitor-list-badge is-default",
-    icon: "default",
-  };
-}
-
-function BadgeIcon({ kind }: { kind: ListBadgeIcon }) {
-  if (kind === "in") {
-    return (
-      <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden>
-        <circle cx="12" cy="12" r="5" />
-      </svg>
-    );
-  }
-  if (kind === "checkout" || kind === "pending") {
-    return (
-      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 8v4l2.5 1.5" />
-      </svg>
-    );
-  }
-  return null;
+function statusToneClass(status?: string) {
+  if (status === "Pending Approval") return "is-pending";
+  if (status === "Approved") return "is-approved";
+  if (status === "Checked In") return "is-in";
+  if (status === "Meeting Done") return "is-checkout";
+  if (status === "Checked Out") return "is-out";
+  if (status === "Rejected") return "is-rejected";
+  return "is-default";
 }
 
 export function VisitorListRowCard({
   item,
   index = 0,
   onOpen,
-  timelineFilledOnly = false,
+  timelineFilledOnly = true,
   showEntryId = false,
 }: VisitorListRowCardProps) {
   const { lang } = useAppLanguage();
-  const style = resolveListBadgeStyle(item.status, Boolean(item.transfer_to_user));
-  const badge: ListBadge = {
-    ...style,
-    text: translateListBadge(lang, item.status, Boolean(item.transfer_to_user)),
-  };
   const time = formatTime(getCurrentStageTimestamp(item), lang) || "—";
   const name = localizePersonName((item.full_name || item.name || "—").trim(), lang);
   const company = (item.visitor_company || "").trim();
   const hostLine = localizeHostDisplay(item.person_to_meet_name, item.floor, lang);
   const rejectionReason =
     item.status === "Rejected" ? extractRejectionReason(item.approval_remarks) : null;
+  const statusLabel = translateListBadge(lang, item.status, Boolean(item.transfer_to_user));
+  const toneClass = statusToneClass(item.status);
 
   return (
-    <div className="vm-visitor-list-item">
-      <button
-        type="button"
-        className="vm-visitor-list-row is-interactive"
-        style={{ animationDelay: `${Math.min(index, 12) * 20}ms` }}
-        onClick={() => onOpen(item)}
-      >
+    <div
+      className="vm-live-card-modern"
+      style={{ animationDelay: `${Math.min(index, 10) * 25}ms` }}
+      onClick={() => onOpen(item)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onOpen(item)}
+    >
+      <div className="vm-live-card-head">
         <VisitorAvatar
           name={name}
           photo={item.photo}
-          className={`vm-visitor-list-avatar avatar-${avatarTone(item.status, index)}`}
+          className={`vm-live-avatar ${toneClass}`}
         />
 
-        <div className="vm-visitor-list-body">
-          <div className="vm-visitor-list-title-row">
-            <span className="vm-visitor-list-name">{name}</span>
+        <div className="vm-live-body">
+          <div className="vm-live-title-row">
+            <span className="vm-live-name">{name}</span>
             {company ? (
-              <span className="vm-visitor-list-company">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <span className="vm-live-company-pill">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="7" width="18" height="14" rx="2" />
                   <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
@@ -128,30 +72,38 @@ export function VisitorListRowCard({
               </span>
             ) : null}
           </div>
-          {showEntryId ? <p className="vm-visitor-list-entry-id">{item.name}</p> : null}
-          <p className="vm-visitor-list-host">
-            {ut(lang, "host_prefix")} <span>{hostLine}</span>
+
+          {showEntryId && item.name ? (
+            <span className="vm-live-entry-id">{item.name}</span>
+          ) : null}
+
+          <p className="vm-live-host-row">
+            <span className="vm-live-host-prefix">{ut(lang, "host_prefix")}</span>
+            <strong className="vm-live-host-name">{hostLine}</strong>
           </p>
+
           {rejectionReason ? (
-            <p className="vm-visitor-list-reject-reason" title={rejectionReason}>
+            <p className="vm-live-reject-reason" title={rejectionReason}>
               {ut(lang, "reason_prefix")} <span>{rejectionReason}</span>
             </p>
           ) : null}
         </div>
 
-        <div className="vm-visitor-list-side">
-          <span className="vm-visitor-list-time">{time}</span>
-          <span className={badge.className}>
-            <BadgeIcon kind={badge.icon} />
-            {badge.text}
+        <div className="vm-live-meta-side">
+          <span className="vm-live-time">{time}</span>
+          <span className={`vm-live-status-badge ${toneClass}`}>
+            <span className="vm-live-badge-dot" aria-hidden />
+            <span>{statusLabel}</span>
           </span>
         </div>
+      </div>
 
-      </button>
+      <div className="vm-live-divider" />
 
-      <div className="vm-visitor-list-timestamps">
+      <div className="vm-live-timeline-wrap">
         <VisitorStageTimeline visitor={item} compact filledOnly={timelineFilledOnly} />
       </div>
     </div>
   );
 }
+

@@ -61,6 +61,9 @@ function parseRange(raw: string | null): LiveRangeMode {
   return raw === "last_7_days" ? "last_7_days" : "overall";
 }
 
+// Fast in-memory cache for instant 0ms tab navigation
+let cachedInsideRows: VisitorListRow[] | null = null;
+
 export function MobileInsidePage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -79,22 +82,28 @@ export function MobileInsidePage() {
   const filter = parseFilter(params.get("status"));
   const rangeMode = parseRange(params.get("range"));
 
-  const [rows, setRows] = useState<VisitorListRow[]>([]);
+  const [rows, setRows] = useState<VisitorListRow[]>(() => cachedInsideRows || []);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(() => !cachedInsideRows);
   const [error, setError] = useState<string | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
   const [selectedDateTime, setSelectedDateTime] = useState("");
 
-  const loadVisitors = useCallback(async () => {
-    setLoading(true);
+  const loadVisitors = useCallback(async (isSilent = false) => {
+    if (!isSilent && !cachedInsideRows) {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const list = await visitorApi.listDetailed(200, visitorScopeFilters(user));
-      setRows(list || []);
+      const list = await visitorApi.listDetailed(100, visitorScopeFilters(user));
+      const nextList = list || [];
+      cachedInsideRows = nextList;
+      setRows(nextList);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not load visitors");
-      setRows([]);
+      if (!cachedInsideRows) {
+        setError(err instanceof Error ? err.message : "Could not load visitors");
+        setRows([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -231,22 +240,28 @@ export function MobileInsidePage() {
           onCheckout={handleCheckout}
         />
       ) : (
-      <div className="vm-overview-card vm-visitor-list-card">
-        {loading ? (
-          <p className="vm-empty-hint">{ut(lang, "loading_visitors")}</p>
-        ) : displayList.length === 0 ? (
-          <p className="vm-empty-hint">—</p>
-        ) : (
-          displayList.map((item, index) => (
-            <VisitorListRowCard
-              key={item.name}
-              item={item}
-              index={index}
-              onOpen={(row) => navigate(`/visitor/${encodeURIComponent(row.name)}`)}
-            />
-          ))
-        )}
-      </div>
+        <div className="vm-live-cards-container">
+          {loading ? (
+            <p className="vm-empty-hint">{ut(lang, "loading_visitors")}</p>
+          ) : displayList.length === 0 ? (
+            <div className="vm-empty-state-modern">
+              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4l3 3" />
+              </svg>
+              <p>No visitors found in this category</p>
+            </div>
+          ) : (
+            displayList.map((item, index) => (
+              <VisitorListRowCard
+                key={item.name}
+                item={item}
+                index={index}
+                onOpen={(row) => navigate(`/visitor/${encodeURIComponent(row.name)}`)}
+              />
+            ))
+          )}
+        </div>
       )}
     </div>
   );

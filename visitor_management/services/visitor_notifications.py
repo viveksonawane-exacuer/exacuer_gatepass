@@ -357,6 +357,90 @@ def _notify_one_user(
 		frappe.log_error(title="VMS web/FCM push notify failed")
 
 
+def notify_security_checkin(doc) -> dict:
+	"""Alert security desk users when a visitor checks in at the gate."""
+	if getattr(frappe.flags, "in_vms_notify", False):
+		return {"skipped": True}
+
+	visitor_name = doc.full_name or doc.name
+	title = _("Visitor Checked In")
+	body = _("Visitor {0} has checked in at the gate.").format(visitor_name)
+
+	recipients = get_security_users()
+	if not recipients:
+		return {"success": False, "recipients": []}
+
+	payload = {
+		"visitor_entry": doc.name,
+		"visitor_name": visitor_name,
+		"host": doc.get("person_to_meet_name") or doc.get("person_to_meet"),
+		"status": "Checked In",
+		"message": body,
+		"event": "checked_in",
+		"alert_variant": "security",
+	}
+
+	frappe.flags.in_vms_notify = True
+	try:
+		for user in recipients:
+			_notify_one_user(
+				user,
+				title=title,
+				body=body,
+				visitor_entry=doc.name,
+				event="checked_in",
+				payload=payload,
+				ring_host=True,
+				ring_channel="security",
+			)
+	finally:
+		frappe.flags.in_vms_notify = False
+
+	return {"success": True, "recipients": recipients, "event": "checked_in"}
+
+
+def notify_security_checked_out(doc) -> dict:
+	"""Alert security desk users when a visitor checks out at the gate."""
+	if getattr(frappe.flags, "in_vms_notify", False):
+		return {"skipped": True}
+
+	visitor_name = doc.full_name or doc.name
+	title = _("Visitor Checked Out")
+	body = _("Visitor {0} has checked out at the gate.").format(visitor_name)
+
+	recipients = get_security_users()
+	if not recipients:
+		return {"success": False, "recipients": []}
+
+	payload = {
+		"visitor_entry": doc.name,
+		"visitor_name": visitor_name,
+		"host": doc.get("person_to_meet_name") or doc.get("person_to_meet"),
+		"status": "Checked Out",
+		"message": body,
+		"event": "checked_out",
+		"alert_variant": "security",
+	}
+
+	frappe.flags.in_vms_notify = True
+	try:
+		for user in recipients:
+			_notify_one_user(
+				user,
+				title=title,
+				body=body,
+				visitor_entry=doc.name,
+				event="checked_out",
+				payload=payload,
+				ring_host=True,
+				ring_channel="security",
+			)
+	finally:
+		frappe.flags.in_vms_notify = False
+
+	return {"success": True, "recipients": recipients, "event": "checked_out"}
+
+
 def notify_security_checkout(doc) -> dict:
 	"""Alert security desk users when a visitor is ready for gate checkout."""
 	if getattr(frappe.flags, "in_vms_notify", False):
@@ -561,6 +645,11 @@ def notify_visitor_lifecycle(doc, previous=None) -> dict | None:
 		)
 
 	result = notify_host_and_creator(doc)
-	if status_changed and doc.status == "Meeting Done":
-		notify_security_checkout(doc)
+	if status_changed:
+		if doc.status == "Checked In":
+			notify_security_checkin(doc)
+		elif doc.status == "Checked Out":
+			notify_security_checked_out(doc)
+		elif doc.status == "Meeting Done":
+			notify_security_checkout(doc)
 	return result

@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <title>Visitor Gate</title>
@@ -38,6 +38,8 @@
       onload="if (window.initSendOTP && window.configuration) window.initSendOTP(window.configuration);"
     ></script>
     <script type="module" crossorigin src="/assets/visitor_management/frontend/vms-app.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/visitor_management/frontend/vms-chunk-vendor-react.js">
+    <link rel="modulepreload" crossorigin href="/assets/visitor_management/frontend/vms-chunk-vendor-axios.js">
     <link rel="stylesheet" crossorigin href="/assets/visitor_management/frontend/vms-asset-index.css">
   <link rel="manifest" href="/assets/visitor_management/frontend/manifest.webmanifest"></head>
   <body>

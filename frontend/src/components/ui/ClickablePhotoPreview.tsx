@@ -27,13 +27,18 @@ export function ClickablePhotoPreview({
       type="button"
       className={`${className}${canPreview ? " is-clickable" : ""} ${frameClassName}`.trim()}
       disabled={!canPreview}
+      style={{ overflow: "hidden", position: "relative" }}
       onClick={() => {
         if (resolved) onPreview(resolved);
       }}
       aria-label={canPreview ? `Preview ${alt}` : emptyLabel}
     >
       {resolved ? (
-        <img src={resolved} alt={alt} />
+        <img
+          src={resolved}
+          alt={alt}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
       ) : name ? (
         <span className="vm-photo-preview-fallback">{initials(name)}</span>
       ) : (

@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import type { ActiveHostAlert } from "@/services/hostAlertManager";
+import { saveNotificationToHistory } from "@/services/localNotificationHistory";
 
 type Props = {
   alert: ActiveHostAlert;
@@ -7,6 +9,11 @@ type Props = {
 };
 
 export function HostAlertRingModal({ alert, onReview, onClose }: Props) {
+  const [dragY, setDragY] = useState(0);
+  const [isSwipingUp, setIsSwipingUp] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const minutesWaiting = Math.max(1, Math.floor((Date.now() - alert.receivedAt) / 60_000));
   const isSecurity = alert.variant === "security";
   const isCreator = alert.variant === "creator";
@@ -45,10 +52,58 @@ export function HostAlertRingModal({ alert, onReview, onClose }: Props) {
           ? "Open visit"
           : "Allow / Review";
 
-  const handleDismiss = onClose || onReview;
+  // Automatically ensure this notification is stored in the persistent notifications section
+  useEffect(() => {
+    saveNotificationToHistory({
+      id: `alert-${alert.visitorEntry || Date.now()}-${alert.receivedAt}`,
+      title: `${kicker}: ${alert.visitorName}`,
+      message: alert.message,
+      variant: alert.variant,
+      visitorEntry: alert.visitorEntry,
+      timestamp: alert.receivedAt,
+    });
+  }, [alert, kicker]);
+
+  const handleDismiss = () => {
+    setIsSwipingUp(true);
+    setTimeout(() => {
+      if (onClose) onClose();
+      else onReview();
+    }, 280);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const currentY = e.touches[0].clientY;
+    const delta = currentY - touchStartY.current;
+    if (delta < 0) {
+      // Dragging upward
+      setDragY(delta);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (dragY < -40) {
+      // Swiped up!
+      handleDismiss();
+    } else {
+      // Snap back
+      setDragY(0);
+    }
+    touchStartY.current = null;
+  };
 
   return (
-    <div className="vm-host-ring-modal" role="alertdialog" aria-modal="true" aria-live="assertive">
+    <div
+      className={`vm-host-ring-modal${isSwipingUp ? " is-swiping-out" : ""}`}
+      role="alertdialog"
+      aria-modal="true"
+      aria-live="assertive"
+    >
       <div className="vm-host-ring-backdrop" onClick={handleDismiss} aria-hidden />
       <div className="vm-host-ring-waves" aria-hidden>
         <span />
@@ -56,7 +111,32 @@ export function HostAlertRingModal({ alert, onReview, onClose }: Props) {
         <span />
       </div>
 
-      <div className="vm-host-ring-card">
+      <div
+        ref={cardRef}
+        className={`vm-host-ring-card${isSwipingUp ? " is-swiped-up" : ""}`}
+        style={{
+          transform: isSwipingUp
+            ? "translateY(-130%) scale(0.92)"
+            : dragY < 0
+            ? `translateY(${dragY}px) scale(${Math.max(0.92, 1 + dragY / 500)})`
+            : undefined,
+          opacity: isSwipingUp ? 0 : dragY < 0 ? Math.max(0.3, 1 + dragY / 200) : 1,
+          transition: isSwipingUp
+            ? "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease"
+            : dragY === 0
+            ? "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease"
+            : "none",
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Swipe up drag pill handle */}
+        <div className="vm-swipe-indicator-pill" onClick={handleDismiss}>
+          <span className="vm-swipe-arrow">↑</span>
+          <span>Swipe up to dismiss</span>
+        </div>
+
         <button
           type="button"
           className="vm-confirm-modal-close"

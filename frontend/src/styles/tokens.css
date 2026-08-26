@@ -1,69 +1,107 @@
 /**
- * Exacuer Global VMS tokens — see ../../DESIGN.md
- * Enterprise primary blue · dark navy · cool surfaces · status accents
- * No gradients-as-brand, no coral/cream, no violet/pink
+ * Exacuer Global VMS tokens — Modern Glassmorphic iOS Aesthetic
+ * Vibrant mesh gradients, frosted glass surfaces, soft ambient glows, rounded pills
  */
 :root {
-  --vms-primary: #4f46e5;
-  --vms-primary-hover: #4338ca;
-  --vms-primary-soft: #eef2ff;
-  --vms-secondary: #6366f1;
-  --vms-secondary-soft: #f5f3ff;
-  --vms-gradient: #4f46e5; /* solid primary — avoid gradient CTAs */
+  /* Typography */
+  --vms-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-  --vms-success: #16a34a;
-  --vms-success-soft: #ecfdf3;
-  --vms-danger: #dc2626;
+  /* Brand & Core Gradients */
+  --vms-primary: #6366f1;
+  --vms-primary-hover: #4f46e5;
+  --vms-primary-soft: #eef2ff;
+  --vms-secondary: #8b5cf6;
+  --vms-secondary-soft: #f5f3ff;
+  --vms-accent-pink: #ec4899;
+  --vms-accent-cyan: #06b6d4;
+  --vms-accent-orange: #f97316;
+  --vms-accent-amber: #f59e0b;
+
+  /* Mesh Gradients */
+  --vms-gradient-mesh: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 38%, #d946ef 70%, #06b6d4 100%);
+  --vms-gradient-ambient: linear-gradient(180deg, rgba(99, 102, 241, 0.16) 0%, rgba(217, 70, 239, 0.08) 35%, rgba(248, 250, 252, 0) 100%);
+  --vms-gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  --vms-gradient-ocean: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0284c7 100%);
+  --vms-gradient-sunset: linear-gradient(135deg, #1e293b 0%, #ea580c 55%, #f43f5e 100%);
+  --vms-gradient-emerald: linear-gradient(135deg, #064e3b 0%, #059669 60%, #10b981 100%);
+  --vms-gradient-ai-banner: linear-gradient(90deg, #1e1b4b 0%, #4338ca 40%, #ec4899 80%, #f97316 100%);
+  --vms-gradient-ai-orb: radial-gradient(circle at 35% 30%, #38bdf8 0%, #818cf8 35%, #c084fc 65%, #f43f5e 100%);
+  --vms-gradient-border: linear-gradient(90deg, #6366f1, #d946ef, #f97316);
+
+  /* Status Tokens */
+  --vms-success: #10b981;
+  --vms-success-soft: #ecfdf5;
+  --vms-danger: #ef4444;
   --vms-danger-soft: #fef2f2;
-  --vms-warning: #d97706;
-  --vms-warning-soft: #fff7ed;
+  --vms-warning: #f59e0b;
+  --vms-warning-soft: #fffbeb;
   --vms-info: #3b82f6;
   --vms-info-soft: #eff6ff;
-  --vms-meeting: #4f46e5;
+  --vms-meeting: #6366f1;
 
-  --vms-navy: #0f172a;
-  --vms-navy-muted: #334155;
-
-  --vms-bg: #f8fafc;
+  /* Surfaces & Glassmorphism */
+  --vms-bg: #ffffff;
   --vms-surface: #ffffff;
   --vms-surface-2: #f1f5f9;
+  --vms-glass-surface: rgba(255, 255, 255, 0.88);
+  --vms-glass-card: rgba(255, 255, 255, 0.94);
+  --vms-glass-border: rgba(255, 255, 255, 0.8);
+  --vms-glass-blur: blur(16px);
+  --vms-dock-bg: rgba(255, 255, 255, 0.86);
+
+  /* Text & Borders */
   --vms-text: #0f172a;
-  --vms-muted: #475569;
+  --vms-navy: #0f172a;
+  --vms-navy-muted: #334155;
+  --vms-muted: #64748b;
   --vms-placeholder: #94a3b8;
   --vms-border: #e2e8f0;
+  --vms-border-light: rgba(226, 232, 240, 0.7);
   --vms-divider: #f1f5f9;
-  --vms-input-border: #cbd5e1;
+  --vms-input-border: #e2e8f0;
 
+  /* Pass & Badges */
   --vms-pass-meta: #64748b;
   --vms-pass-seal: #ffffff;
-  --vms-pass-accent: #4f46e5;
+  --vms-pass-accent: #6366f1;
 
-  /* Spacing system */
+  /* Spacing & Radii */
   --vms-space-section: 20px;
-  --vms-space-card: 10px;
-  --vms-space-pad: 12px;
-  --vms-page-gutter: 0.75rem;
+  --vms-space-card: 14px;
+  --vms-space-pad: 14px;
+  --vms-page-gutter: 1rem;
 
-  --vms-radius: 16px;
+  --vms-radius: 20px;
   --vms-radius-sm: 12px;
-  --vms-radius-lg: 16px;
-  --vms-btn-height: 48px;
-  --vms-input-height: 52px;
-  --vms-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-  --vms-shadow-btn: 0 8px 20px rgba(79, 70, 229, 0.22);
-  --vms-focus-ring: 0 0 0 4px rgba(79, 70, 229, 0.12);
-  --vms-motion: 150ms ease-in-out;
+  --vms-radius-md: 16px;
+  --vms-radius-lg: 24px;
+  --vms-radius-xl: 28px;
+  --vms-radius-pill: 9999px;
 
-  /* Typography system */
-  --vms-font: Helvetica, "Helvetica Neue", Arial, sans-serif;
-  --vms-title-page: 32px;
+  --vms-btn-height: 48px;
+  --vms-input-height: 50px;
+
+  /* Elevation & Glow Shadows */
+  --vms-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --vms-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
+  --vms-shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.03);
+  --vms-shadow-glow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  --vms-shadow-ai-btn: 0 6px 20px rgba(217, 70, 239, 0.4);
+  --vms-shadow-dock: 0 12px 36px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --vms-shadow-btn: 0 8px 20px rgba(99, 102, 241, 0.25);
+  --vms-focus-ring: 0 0 0 4px rgba(99, 102, 241, 0.18);
+  --vms-motion: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Typography */
+  --vms-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --vms-title-page: 28px;
   --vms-title-section: 18px;
   --vms-title-card: 16px;
-  --vms-title-lg: 32px;
+  --vms-title-lg: 30px;
   --vms-label: 12px;
   --vms-body: 14px;
   --vms-caption: 12px;
-  --vms-badge: 12px;
+  --vms-badge: 11px;
 
   --bg: var(--vms-bg);
   --surface: var(--vms-surface);
@@ -72,3 +110,4 @@
   --accent: var(--vms-primary);
   --border: var(--vms-border);
 }
+

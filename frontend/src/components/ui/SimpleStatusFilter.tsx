@@ -7,37 +7,24 @@ type SimpleStatusFilterProps = {
   value: string;
   onChange: (id: string) => void;
   className?: string;
-  /** When true, the "all" option is shown full-width above the grid. */
   pinAllFilter?: boolean;
 };
 
-function FilterButton({
-  opt,
-  active,
-  onChange,
-  countLabel,
-  className = "",
-}: {
-  opt: StatusFilterOption;
-  active: boolean;
-  onChange: (id: string) => void;
-  countLabel?: string;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      className={`vm-guard-filter-btn${active ? " is-active" : ""}${opt.tone ? ` tone-${opt.tone}` : ""}${className ? ` ${className}` : ""}`}
-      onClick={() => onChange(opt.id)}
-    >
-      <span className="vm-guard-filter-label">{opt.label}</span>
-      {countLabel != null ? (
-        <span className="vm-guard-filter-count">{countLabel}</span>
-      ) : null}
-    </button>
-  );
+function statusDotColor(tone?: string) {
+  switch (tone) {
+    case "green":
+      return "#10b981";
+    case "amber":
+      return "#f59e0b";
+    case "blue":
+      return "#3b82f6";
+    case "indigo":
+      return "#6366f1";
+    case "red":
+      return "#ef4444";
+    default:
+      return "#94a3b8";
+  }
 }
 
 export function SimpleStatusFilter({
@@ -45,35 +32,47 @@ export function SimpleStatusFilter({
   value,
   onChange,
   className = "",
-  pinAllFilter = false,
 }: SimpleStatusFilterProps) {
   const { lang } = useAppLanguage();
-  const allOption = pinAllFilter ? options.find((opt) => opt.id === "all") : undefined;
-  const gridOptions = pinAllFilter ? options.filter((opt) => opt.id !== "all") : options;
 
   return (
-    <div className={`vm-guard-filter-card ${className}`.trim()} role="tablist" aria-label="Visitor status filter">
-      {allOption ? (
-        <FilterButton
-          opt={allOption}
-          active={value === allOption.id}
-          onChange={onChange}
-          countLabel={typeof allOption.count === "number" ? formatCount(allOption.count, lang) : undefined}
-          className="is-all-row"
-        />
-      ) : null}
+    <div
+      className={`vm-status-chips-scroll ${className}`.trim()}
+      role="tablist"
+      aria-label="Visitor status filter"
+    >
+      {options.map((opt) => {
+        const isActive = value === opt.id;
+        const countLabel =
+          typeof opt.count === "number" ? formatCount(opt.count, lang) : undefined;
+        const dot = statusDotColor(opt.tone);
 
-      <div className={`vm-guard-filter${pinAllFilter ? " vm-guard-filter-grid" : ""}`.trim()}>
-        {gridOptions.map((opt) => (
-          <FilterButton
+        return (
+          <button
             key={opt.id}
-            opt={opt}
-            active={value === opt.id}
-            onChange={onChange}
-            countLabel={typeof opt.count === "number" ? formatCount(opt.count, lang) : undefined}
-          />
-        ))}
-      </div>
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            className={`vm-status-chip-btn${isActive ? " is-active" : ""}`}
+            onClick={() => onChange(opt.id)}
+          >
+            {opt.id !== "all" && (
+              <span
+                className="vm-status-chip-dot"
+                style={{ background: dot }}
+                aria-hidden
+              />
+            )}
+            <span className="vm-status-chip-label">{opt.label}</span>
+            {countLabel != null ? (
+              <span className={`vm-status-chip-count${isActive ? " is-active" : ""}`}>
+                {countLabel}
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
     </div>
   );
 }
+

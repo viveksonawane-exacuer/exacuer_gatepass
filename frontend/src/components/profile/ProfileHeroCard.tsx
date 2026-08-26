@@ -23,9 +23,9 @@ export function ProfileHeroCard({
   const avatarInitials = initials(name);
 
   return (
-    <div className="vm-profile-card">
-      <div className="vm-profile-card-top">
-        <div className="vm-profile-avatar-wrap">
+    <div className="vm-profile-modern-card">
+      <div className="vm-profile-modern-header">
+        <div className="vm-profile-avatar-container">
           {imageUrl ? (
             <img
               src={imageUrl.startsWith("http") || imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}
@@ -37,27 +37,41 @@ export function ProfileHeroCard({
               <span>{avatarInitials || "AD"}</span>
             </div>
           )}
+          <span className="vm-profile-status-dot" title="Active" />
         </div>
-        <div className="vm-profile-card-copy">
-          <h2 className="vm-profile-name">{name}</h2>
-          <span className="vm-profile-role">{role}</span>
+
+        <div className="vm-profile-identity-box">
+          <div className="vm-profile-name-row">
+            <h2 className="vm-profile-name">{name}</h2>
+            <span className="vm-profile-verified-badge">✓</span>
+          </div>
+          <div className="vm-profile-role-pill">
+            <span className="vm-profile-role-icon">🛡️</span>
+            <span>{role}</span>
+          </div>
         </div>
       </div>
 
-      <dl className="vm-profile-fields">
-        <div className="vm-profile-field">
-          <dt>{ut(lang, "employee_id")}</dt>
-          <dd>{employeeId || "—"}</dd>
+      <div className="vm-profile-grid-meta">
+        <div className="vm-profile-meta-item">
+          <span className="vm-profile-meta-label">{ut(lang, "employee_id")}</span>
+          <strong className="vm-profile-meta-val">{employeeId || "—"}</strong>
         </div>
-        <div className="vm-profile-field">
-          <dt>{ut(lang, "email")}</dt>
-          <dd>{email || "—"}</dd>
+        <div className="vm-profile-meta-item">
+          <span className="vm-profile-meta-label">{ut(lang, "email")}</span>
+          <strong className="vm-profile-meta-val" title={email}>{email || "—"}</strong>
         </div>
-        <div className="vm-profile-field">
-          <dt>{ut(lang, "department")}</dt>
-          <dd>{department || "—"}</dd>
+        <div className="vm-profile-meta-item">
+          <span className="vm-profile-meta-label">{ut(lang, "department")}</span>
+          <strong className="vm-profile-meta-val">{department || "Operations"}</strong>
         </div>
-      </dl>
+        <div className="vm-profile-meta-item">
+          <span className="vm-profile-meta-label">Status</span>
+          <strong className="vm-profile-meta-val vm-profile-status-val">
+            <span className="vm-live-pulse-dot" /> Active Session
+          </strong>
+        </div>
+      </div>
     </div>
   );
 }

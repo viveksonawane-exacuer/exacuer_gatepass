@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
@@ -20,117 +20,105 @@ function dockLabel(lang: VisitorLang, to: string, fallback: string): string {
   return key ? ut(lang, key) : fallback;
 }
 
-/** iPhone-like shrink: hysteresis + delayed commit for smooth motion. */
-const COMPACT_AFTER = 64;
-const EXPAND_BELOW = 20;
-const DOWN_DELTA = 12;
-const UP_DELTA = 10;
-
 export function FloatingNavbar() {
   const { user } = useAuth();
   const { lang } = useAppLanguage();
   const navigate = useNavigate();
   const tabs = mobileTabsFor(user);
   const location = useLocation();
-  const [compact, setCompact] = useState(false);
-  const compactRef = useRef(false);
-  const lastYRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nativeNav = shouldUseHashRouter();
+  const [fabBurst, setFabBurst] = useState(false);
 
   /* Hide dock on Add Entry so the + button does not cover Continue. */
   const hideDock = location.pathname === "/check-in";
 
-  useEffect(() => {
-    if (hideDock) return;
-
-    const scroller =
-      (document.getElementById("vms-scroll-root") as HTMLElement | null) ||
-      (document.querySelector(".m-content") as HTMLElement | null) ||
-      (document.scrollingElement as HTMLElement | null) ||
-      document.documentElement;
-
-    lastYRef.current = scroller.scrollTop || 0;
-    let ticking = false;
-
-    const commit = (next: boolean) => {
-      if (compactRef.current === next) return;
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        compactRef.current = next;
-        setCompact(next);
-      }, next ? 90 : 50);
-    };
-
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = scroller.scrollTop || window.scrollY || 0;
-        const delta = y - lastYRef.current;
-        const goingDown = delta > DOWN_DELTA;
-        const goingUp = delta < -UP_DELTA;
-
-        if (y <= EXPAND_BELOW) commit(false);
-        else if (goingDown && y > COMPACT_AFTER) commit(true);
-        else if (goingUp) commit(false);
-
-        lastYRef.current = y;
-        ticking = false;
-      });
-    };
-
-    scroller.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      scroller.removeEventListener("scroll", onScroll);
-      window.removeEventListener("scroll", onScroll);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [location.pathname, hideDock]);
-
   if (hideDock || tabs.length === 0) return null;
 
+  const rawPath = location.pathname || "/";
+  const normalizedPath = rawPath.replace(/\/+$/, "") || "/";
+
+  const activeIndex = tabs.findIndex((t) => {
+    const tabPath = (t.to || "/").replace(/\/+$/, "") || "/";
+    if (tabPath === "/") {
+      return normalizedPath === "/" || normalizedPath === "/m";
+    }
+    return normalizedPath === tabPath || normalizedPath.startsWith(tabPath + "/");
+  });
+
+  const validIndex = activeIndex >= 0 ? activeIndex : 0;
+  const activeTab = tabs[validIndex];
+  const isRegularTabActive = Boolean(activeTab && !activeTab.fab && activeTab.to !== "/check-in");
+
+  const handleFabClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (fabBurst) return;
+    setFabBurst(true);
+    window.setTimeout(() => {
+      navigate("/check-in");
+      window.setTimeout(() => {
+        setFabBurst(false);
+      }, 400);
+    }, 220);
+  };
+
   return (
-    <nav
-      className={`vm-dock${compact ? " is-compact" : ""}`}
-      aria-label="Visitor Management Navigation"
-      data-compact={compact ? "true" : "false"}
-    >
+    <nav className="vm-dock" aria-label="Visitor Management Navigation">
+      {fabBurst && <div className="vm-fab-fullscreen-zoom-circle" aria-hidden="true" />}
       <div className="vm-dock-inner">
-        {tabs.map((tab) => {
+        {/* Horizontal Sliding Liquid Water-Drop Droplet */}
+        <div
+          className="vm-dock-sliding-droplet"
+          style={{
+            width: `${100 / tabs.length}%`,
+            transform: `translateX(${validIndex * 100}%)`,
+            opacity: isRegularTabActive ? 1 : 0,
+          }}
+          aria-hidden="true"
+        >
+          <div className="vm-dock-droplet-bubble" />
+        </div>
+
+        {tabs.map((tab, idx) => {
           const isAddEntry = Boolean(tab.fab || tab.to === "/check-in");
           const label = dockLabel(lang, tab.to, tab.label);
+          const isTabActive = idx === validIndex && !isAddEntry;
+
           return (
             <NavLink
               key={tab.to}
               to={tab.to}
               end={tab.to === "/"}
-              className={({ isActive }) =>
-                `vm-dock-tab${isAddEntry ? " is-add" : ""}${isActive ? " is-active" : ""}`
+              className={({ isActive: navActive }) =>
+                `vm-dock-tab${isAddEntry ? " is-add" : ""}${isTabActive || (navActive && !isAddEntry) ? " is-active" : ""}`
               }
               aria-label={label}
               title={label}
               onClick={(event) => {
-                // Capacitor WebView: force client navigate so tabs update without hard refresh.
+                if (isAddEntry) {
+                  handleFabClick(event);
+                  return;
+                }
                 if (!nativeNav) return;
                 event.preventDefault();
                 if (location.pathname === tab.to) return;
                 navigate(tab.to);
               }}
             >
-              <span className="vm-dock-pill">
-                <span className={`vm-dock-icon${isAddEntry ? " is-add" : ""}`}>
-                  {isAddEntry ? (
-                    <span className="vm-dock-plus" aria-hidden>
-                      +
-                    </span>
-                  ) : (
-                    <MobileTabIconView name={tab.icon} size={20} />
-                  )}
-                </span>
-                <span className="vm-dock-label">{label}</span>
-              </span>
+              {isAddEntry ? (
+                <div className={`vm-dock-add-btn${fabBurst ? " is-bursting" : ""}`} aria-hidden>
+                  {fabBurst ? <span className="vm-fab-ripple-burst" /> : null}
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.6">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="vm-dock-item-stack">
+                  <span className="vm-dock-tab-icon">
+                    <MobileTabIconView name={tab.icon} size={21} />
+                  </span>
+                  <span className="vm-dock-label">{label}</span>
+                </div>
+              )}
             </NavLink>
           );
         })}
@@ -138,3 +126,5 @@ export function FloatingNavbar() {
     </nav>
   );
 }
+
+

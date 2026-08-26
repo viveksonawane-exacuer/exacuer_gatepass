@@ -168,12 +168,18 @@ export default defineConfig(({ command, mode }) => {
 				entryFileNames: isCapacitor ? "assets/[name]-[hash].js" : "vms-app.js",
 				chunkFileNames: isCapacitor ? "assets/[name]-[hash].js" : "vms-chunk-[name].js",
 				assetFileNames: isCapacitor ? "assets/[name]-[hash].[ext]" : "vms-asset-[name].[ext]",
-				manualChunks: isCapacitor
-					? {
-							vendor: ["react", "react-dom", "react-router-dom"],
-							axios: ["axios"],
-						}
-					: undefined,
+				manualChunks(id) {
+					if (
+						id.includes("node_modules/react/") ||
+						id.includes("node_modules/react-dom/") ||
+						id.includes("node_modules/react-router-dom/")
+					) {
+						return "vendor-react";
+					}
+					if (id.includes("node_modules/axios/")) {
+						return "vendor-axios";
+					}
+				},
 			},
 		},
 	},

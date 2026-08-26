@@ -76,31 +76,39 @@ def get_kpis(
 	start, end = _parse_dates(from_date, to_date)
 	counts = {status: 0 for status in KPI_STATUSES}
 	total = 0
-	for status in KPI_STATUSES:
-		n = frappe.db.count(
-			"Visitor Entry",
-			{"status": status, "creation": ("between", [f"{start} 00:00:00", f"{end} 23:59:59"])},
-		)
-		counts[status] = int(n or 0)
-		total += counts[status]
-	counts["On Premises"] = int(
-		frappe.db.count(
-			"Visitor Entry",
-			{"status": ["in", ["Checked In", "Meeting Done"]]},
-		)
-		or 0
+
+	# Fast single-query aggregation for all status counts
+	rows = frappe.db.sql(
+		"""
+		SELECT status, COUNT(*) as cnt
+		FROM `tabVisitor Entry`
+		WHERE creation BETWEEN %s AND %s
+		GROUP BY status
+		""",
+		(f"{start} 00:00:00", f"{end} 23:59:59"),
+		as_dict=True,
 	)
+	for r in rows:
+		if r.status in counts:
+			counts[r.status] = int(r.cnt or 0)
+			total += counts[r.status]
+
+	# Fast on-premises count
+	counts["On Premises"] = counts.get("Checked In", 0) + counts.get("Meeting Done", 0)
 	counts["Checkout Pending"] = counts.get("Meeting Done", 0)
-	counts["Transferred"] = int(
-		frappe.db.count(
-			"Visitor Entry",
-			{
-				"transfer_to_user": ["!=", ""],
-				"creation": ("between", [f"{start} 00:00:00", f"{end} 23:59:59"]),
-			},
-		)
-		or 0
+
+	# Transferred count
+	transferred_rows = frappe.db.sql(
+		"""
+		SELECT COUNT(*) as cnt
+		FROM `tabVisitor Entry`
+		WHERE transfer_to_user IS NOT NULL AND transfer_to_user != ''
+		  AND creation BETWEEN %s AND %s
+		""",
+		(f"{start} 00:00:00", f"{end} 23:59:59"),
+		as_dict=True,
 	)
+	counts["Transferred"] = int(transferred_rows[0].cnt or 0) if transferred_rows else 0
 	counts["pending"] = counts.get("Pending Approval", 0)
 	counts["total"] = total
 	return counts

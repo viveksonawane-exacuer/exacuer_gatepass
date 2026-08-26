@@ -22,7 +22,7 @@ type RecentVisitorsListProps = {
 function statusTone(status: string) {
   const s = status.toLowerCase();
   if (s.includes("out") || s.includes("चेक-आउट") || s.includes("नाकार") || s.includes("अस्वीकृत")) {
-    return { color: "#ea580c", bg: "#ffedd5" };
+    return { color: "#ea580c", bg: "rgba(234, 88, 12, 0.08)", dot: "#ea580c" };
   }
   if (
     s.includes("pending") ||
@@ -32,17 +32,17 @@ function statusTone(status: string) {
     s.includes("नाकार") ||
     s.includes("अस्वीकृत")
   ) {
-    return { color: "#d97706", bg: "#fff7ed" };
+    return { color: "#d97706", bg: "rgba(217, 119, 6, 0.08)", dot: "#f59e0b" };
   }
-  return { color: "#16a34a", bg: "#dcfce7" };
+  return { color: "#10b981", bg: "rgba(16, 185, 129, 0.08)", dot: "#10b981" };
 }
 
 function toneFromRaw(raw?: string, fallbackStatus?: string) {
   if (raw) {
     const s = raw.toLowerCase();
-    if (s.includes("out") || s.includes("reject")) return { color: "#ea580c", bg: "#ffedd5" };
-    if (s.includes("pending")) return { color: "#d97706", bg: "#fff7ed" };
-    return { color: "#16a34a", bg: "#dcfce7" };
+    if (s.includes("out") || s.includes("reject")) return { color: "#ea580c", bg: "rgba(234, 88, 12, 0.08)", dot: "#ea580c" };
+    if (s.includes("pending")) return { color: "#d97706", bg: "rgba(217, 119, 6, 0.08)", dot: "#f59e0b" };
+    return { color: "#10b981", bg: "rgba(16, 185, 129, 0.08)", dot: "#10b981" };
   }
   return statusTone(fallbackStatus || "");
 }
@@ -53,27 +53,41 @@ export function RecentVisitorsList({ visitors = [], loading = false }: RecentVis
   const displayVisitors = visitors;
 
   return (
-    <div className="vm-overview-card vm-chart-card vm-recent-card">
-      <div className="vm-chart-card-head">
-        <div className="vm-chart-title-group">
-          <div className="vm-chart-icon-badge" aria-hidden>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+    <div className="vm-overview-card vm-recent-card vm-trending-style">
+      <div className="vm-trending-head">
+        <div className="vm-trending-head-left">
+          <div className="vm-trending-head-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
-          <h3 className="vm-chart-card-title">{ut(lang, "recent_visitors")}</h3>
+          <div className="vm-trending-head-titles">
+            <h3 className="vm-trending-title">{ut(lang, "recent_visitors")}</h3>
+            {!loading && displayVisitors.length > 0 ? (
+              <span className="vm-trending-count-badge">
+                {displayVisitors.length} Recent
+              </span>
+            ) : null}
+          </div>
         </div>
-        <button type="button" className="vm-card-link-btn" onClick={() => navigate("/inside")}>
-          {ut(lang, "view_all")}
+
+        <button type="button" className="vm-trending-viewall-btn" onClick={() => navigate("/inside")}>
+          {ut(lang, "view_all")} ›
         </button>
       </div>
 
-      <div className="vm-recent-list">
+      <div className="vm-trending-list">
         {loading ? (
-          <span className="vm-empty-hint">{ut(lang, "loading_visitors")}</span>
+          <div className="vm-empty-hint-box">
+            <span className="vm-empty-hint">{ut(lang, "loading_visitors")}</span>
+          </div>
         ) : displayVisitors.length === 0 ? (
-          <span className="vm-empty-hint">—</span>
+          <div className="vm-empty-hint-box">
+            <span className="vm-empty-hint">No recent visitors logged today</span>
+          </div>
         ) : (
           displayVisitors.map((v) => {
             const tone = toneFromRaw(v.statusRaw, v.status);
@@ -81,25 +95,43 @@ export function RecentVisitorsList({ visitors = [], loading = false }: RecentVis
               <button
                 key={v.name}
                 type="button"
-                className="vm-recent-row"
+                className="vm-trending-row"
                 onClick={() => navigate(`/visitor/${encodeURIComponent(v.name)}`)}
               >
-                <div className="vm-recent-row-left">
-                  <VisitorAvatar
-                    name={v.full_name}
-                    photo={v.photo}
-                    className="vm-recent-avatar-circle"
-                  />
-                  <div className="vm-recent-row-copy">
-                    <strong className="vm-recent-name">{v.full_name}</strong>
-                    <span className="vm-recent-purpose">{v.purpose || "—"}</span>
+                <div className="vm-trending-avatar-col">
+                  <div className="vm-trending-avatar-wrap">
+                    <VisitorAvatar
+                      name={v.full_name}
+                      photo={v.photo}
+                      className="vm-trending-avatar-img"
+                    />
                   </div>
                 </div>
-                <div className="vm-recent-row-meta">
-                  <span className="vm-recent-time">{v.time}</span>
-                  <span className="vm-recent-status" style={{ color: tone.color, background: tone.bg }}>
-                    {v.status}
-                  </span>
+
+                <div className="vm-trending-info-col">
+                  <div className="vm-trending-name-row">
+                    <strong className="vm-trending-name">{v.full_name}</strong>
+                    <span className="vm-trending-type-tag">.pass</span>
+                  </div>
+                  <div className="vm-trending-status-row">
+                    <span
+                      className="vm-trending-status-pill"
+                      style={{ backgroundColor: tone.bg, color: tone.color }}
+                    >
+                      <span className="vm-trending-dot" style={{ backgroundColor: tone.dot }} />
+                      {v.status}
+                    </span>
+                    {v.purpose ? (
+                      <span className="vm-trending-purpose" title={v.purpose}>
+                        · {v.purpose}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="vm-trending-meta-col">
+                  <span className="vm-trending-time-pill">{v.time}</span>
+                  <span className="vm-trending-row-arrow" aria-hidden>›</span>
                 </div>
               </button>
             );

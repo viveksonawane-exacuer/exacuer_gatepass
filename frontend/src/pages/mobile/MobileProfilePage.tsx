@@ -34,7 +34,7 @@ export function MobileProfilePage() {
 
   const name = user?.full_name || user?.user || "Administrator";
   const email = user?.email || user?.user || "—";
-  const role = user?.vms_roles?.[0] || user?.roles?.find((r) => r !== "All" && r !== "Guest") || "Employee";
+  const role = user?.vms_roles?.[0] || user?.roles?.find((r) => r !== "All" && r !== "Guest") || "PA Security Guard";
   const image = user?.user_image || undefined;
 
   useEffect(() => {
@@ -66,9 +66,8 @@ export function MobileProfilePage() {
   }, [user?.user]);
 
   return (
-    <div className="vm-home-page">
-
-      <main className="vm-main-body vm-page-content-start vm-profile-page">
+    <div className="vm-profile-page-root">
+      <main className="vm-profile-container">
         {showProfileCard ? (
           <ProfileHeroCard
             name={name}
@@ -85,19 +84,27 @@ export function MobileProfilePage() {
           onToggleProfileCard={() => setShowProfileCard((prev) => !prev)}
         />
 
-        {isAuthenticated || user?.verified ? (
-          <button
-            type="button"
-            className="vm-btn-outline vm-profile-logout"
-            onClick={() => void logout()}
-          >
-            {ut(lang, "logout")}
-          </button>
-        ) : (
-          <Link to="/" className="vm-btn-primary">
-            {ut(lang, "sign_in")}
-          </Link>
-        )}
+        <div className="vm-profile-session-actions">
+          {isAuthenticated || user?.verified ? (
+            <button
+              type="button"
+              className="vm-profile-logout-btn"
+              onClick={() => void logout()}
+            >
+              <span className="vm-profile-logout-icon">🚪</span>
+              <span>{ut(lang, "logout")}</span>
+            </button>
+          ) : (
+            <Link to="/" className="vm-btn-primary">
+              {ut(lang, "sign_in")}
+            </Link>
+          )}
+
+          <div className="vm-profile-app-meta">
+            <span>Exacuer GatePass VMS • v2.4.0</span>
+            <span>Secured & Powered by Frappe Framework</span>
+          </div>
+        </div>
       </main>
     </div>
   );

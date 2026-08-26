@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { apiClient } from "@/api/client";
 import { passApi, type VisitorListRow } from "@/api/vms";
 import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
@@ -123,37 +124,44 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
         ? `Pass status: ${status}`
         : undefined;
 
-  function handlePrint() {
-    window.print();
-  }
-
-  return (
+  const modalNode = (
     <div
-      className="vm-confirm-modal-root vm-gate-pass-modal-root"
+      className="vm-gate-pass-modal-root vm-gate-pass-portal-root"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vm-view-gate-pass-title"
     >
-      <button type="button" className="vm-confirm-modal-backdrop vm-no-print" onClick={onClose} aria-label="Close" />
+      <button type="button" className="vm-confirm-modal-backdrop vm-no-print" onClick={onClose} aria-label="Close modal" />
 
-      <div className="vm-confirm-modal-card vm-view-gate-pass-card">
-        <button type="button" className="vm-confirm-modal-close vm-no-print" onClick={onClose} aria-label="Close">
+      <div className="vm-view-gate-pass-card-wrap">
+        <button
+          type="button"
+          className="vm-gate-pass-popup-close vm-no-print"
+          onClick={onClose}
+          aria-label="Close gate pass"
+        >
           ✕
         </button>
 
-        <div className="vm-confirm-modal-top vm-view-gate-pass-top vm-no-print">
-          <h2 id="vm-view-gate-pass-title" className="vm-confirm-modal-title">
-            View Gate Pass
-          </h2>
-          <p className="vm-confirm-modal-sub">
-            Gate pass for <strong>{visitorName}</strong>
-          </p>
-        </div>
+        {loading ? (
+          <div className="vm-gatepass-loading-box">
+            <div className="vm-pull-spinner-box is-active-spin">
+              <svg className="vm-pull-svg" viewBox="0 0 24 24" width="28" height="28">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeDasharray="24 32" />
+              </svg>
+            </div>
+            <p>Loading digital pass…</p>
+          </div>
+        ) : null}
 
-        {loading ? <p className="vm-empty-hint vm-no-print">Loading gate pass…</p> : null}
-        {error ? <p className="login-error vm-no-print">{error}</p> : null}
+        {error && !loading ? (
+          <div className="vm-gatepass-error-box">
+            <p>{error}</p>
+            <button type="button" className="vm-btn-secondary" onClick={onClose}>Close</button>
+          </div>
+        ) : null}
 
-        {!loading && !error && passUrl ? (
+        {!loading && (
           <VisitorGatePassCard
             passCode={passCode}
             visitorName={visitorName}
@@ -165,22 +173,14 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
             noticeMessage={noticeMessage}
             validUntil={validUntil}
             photoUrl={pass?.photo || visitor.photo}
-            qrPayload={passUrl}
+            qrPayload={passUrl || `${window.location.origin}/vms/pass/${encodeURIComponent(passCode)}`}
             visitorCount={visitorCount}
             additionalGuests={additionalGuests}
-            hideActions
           />
-        ) : null}
-
-        <div className="vm-view-gate-pass-footer vm-no-print">
-          <button type="button" className="vm-confirm-act-btn is-primary" onClick={handlePrint} disabled={!passUrl}>
-            Print
-          </button>
-          <button type="button" className="vm-confirm-act-btn is-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalNode, document.body) : modalNode;
 }

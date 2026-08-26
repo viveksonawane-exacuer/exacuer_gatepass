@@ -127,15 +127,13 @@ export function MobileCheckInPage() {
   const { user } = useAuth();
   const showCheckout = canPerformCheckout(user);
   const [step, setStep] = useState<JourneyStep>(() =>
-    boot.resume && boot.draft ? boot.draft.step : "mobile",
+    boot.resume && boot.draft ? boot.draft.step : "details",
   );
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LEN).fill(""));
-  const [otpVerified, setOtpVerified] = useState(() =>
-    Boolean(boot.resume && boot.draft?.otpVerified),
-  );
+  const [otpVerified, setOtpVerified] = useState(true);
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [additionalGuests, setAdditionalGuests] = useState<AdditionalGuest[]>(() =>
     boot.resume && boot.draft ? boot.draft.additionalGuests : [],
@@ -174,11 +172,11 @@ export function MobileCheckInPage() {
 
   const resetEntry = useCallback(() => {
     clearCheckInDraft();
-    setStep("mobile");
+    setStep("details");
     setBusy(false);
     setError(null);
     setOtpDigits(Array(OTP_LEN).fill(""));
-    setOtpVerified(false);
+    setOtpVerified(true);
     setOtpSuccess(false);
     setAdditionalGuests([]);
     setAdditionalGuestsOpen(false);
@@ -214,14 +212,11 @@ export function MobileCheckInPage() {
   const goBackInJourney = useCallback(() => {
     switch (step) {
       case "otp":
-        setOtpDigits(Array(OTP_LEN).fill(""));
-        setOtpSuccess(false);
-        setOtpVerified(false);
-        setError(null);
-        setStep("mobile");
+      case "mobile":
+        leaveCheckIn();
         return;
       case "details":
-        setStep("otp");
+        leaveCheckIn();
         return;
       case "awaiting":
         setStep("details");
@@ -237,9 +232,6 @@ export function MobileCheckInPage() {
         return;
       case "checkout":
         setStep("meeting");
-        return;
-      case "mobile":
-        leaveCheckIn();
         return;
       default: {
         const _exhaustive: never = step;
@@ -611,9 +603,9 @@ function normalizePhotoToVertical(file: File): Promise<File> {
 
   async function onSubmitDetails(e: FormEvent) {
     e.preventDefault();
-    if (!otpVerified) {
-      setError(vt(lang, "err_verify_otp"));
-      setStep("mobile");
+
+    if (!form.mobile.trim()) {
+      setError(vt(lang, "err_mobile"));
       return;
     }
 
@@ -974,22 +966,11 @@ function normalizePhotoToVertical(file: File): Promise<File> {
 
       {step === "details" ? (
         <div className="vm-home-page" lang={lang}>
-          <header className="vm-page-header vm-checkin-step-header" style={{ justifyContent: "flex-start", gap: "0.75rem" }}>
-            <button
-              type="button"
-              className="vm-back-btn"
-              onClick={() => setStep("otp")}
-              aria-label="Back"
-            >
-              ‹
-            </button>
-            <h1 className="vj-h2" style={{ margin: 0, fontSize: "1.2rem" }}>Purpose</h1>
-          </header>
-
           <main className="vm-main-body vm-form-surface">
             <VisitorDetailsForm
               lang={lang}
               values={{
+                mobile: form.mobile,
                 first_name: form.first_name,
                 middle_name: form.middle_name,
                 last_name: form.last_name,

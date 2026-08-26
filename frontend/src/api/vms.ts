@@ -57,9 +57,31 @@ export type AuthProfile = {
   expires_in?: number;
 };
 
-async function callMethod<T>(path: string, args?: Record<string, unknown>): Promise<T> {
+const apiMemoryCache = new Map<string, { data: unknown; timestamp: number }>();
+
+export function clearApiCache() {
+  apiMemoryCache.clear();
+}
+
+async function callMethod<T>(path: string, args?: Record<string, unknown>, useCache = true): Promise<T> {
+  const cacheKey = `m:${path}:${JSON.stringify(args ?? {})}`;
+  const now = Date.now();
+  if (useCache) {
+    const hit = apiMemoryCache.get(cacheKey);
+    if (hit && now - hit.timestamp < 15000) {
+      // Revalidate in background
+      void apiClient.post(`/api/method/${METHOD}.${path}`, args ?? {}).then(({ data }) => {
+        apiMemoryCache.set(cacheKey, { data: data.message, timestamp: Date.now() });
+      }).catch(() => {});
+      return hit.data as T;
+    }
+  }
+
   try {
     const { data } = await apiClient.post(`/api/method/${METHOD}.${path}`, args ?? {});
+    if (useCache) {
+      apiMemoryCache.set(cacheKey, { data: data.message, timestamp: now });
+    }
     return data.message as T;
   } catch (err: unknown) {
     throw new Error(extractApiError(err));
@@ -305,7 +327,7 @@ export type VisitorListRow = {
   owner_name?: string;
 };
 
-/** Standard Frappe list API — no custom methods / fields. */
+/** Standard Frappe list API with in-memory caching. */
 export async function frappeGetList<T extends Record<string, unknown> = Record<string, unknown>>(args: {
   doctype: string;
   fields?: string[];
@@ -313,6 +335,22 @@ export async function frappeGetList<T extends Record<string, unknown> = Record<s
   order_by?: string;
   limit_page_length?: number;
 }): Promise<T[]> {
+  const cacheKey = `gl:${args.doctype}:${JSON.stringify(args.filters || {})}:${args.order_by}:${args.limit_page_length}:${JSON.stringify(args.fields || [])}`;
+  const now = Date.now();
+  const hit = apiMemoryCache.get(cacheKey);
+  if (hit && now - hit.timestamp < 12000) {
+    void apiClient.post(`/api/method/frappe.client.get_list`, {
+      doctype: args.doctype,
+      fields: JSON.stringify(args.fields ?? ["name"]),
+      filters: JSON.stringify(args.filters ?? {}),
+      order_by: args.order_by ?? "modified desc",
+      limit_page_length: args.limit_page_length ?? 50,
+    }).then(({ data }) => {
+      apiMemoryCache.set(cacheKey, { data: data.message || [], timestamp: Date.now() });
+    }).catch(() => {});
+    return hit.data as T[];
+  }
+
   try {
     const { data } = await apiClient.post(`/api/method/frappe.client.get_list`, {
       doctype: args.doctype,
@@ -321,7 +359,9 @@ export async function frappeGetList<T extends Record<string, unknown> = Record<s
       order_by: args.order_by ?? "modified desc",
       limit_page_length: args.limit_page_length ?? 50,
     });
-    return (data.message as T[]) || [];
+    const result = (data.message as T[]) || [];
+    apiMemoryCache.set(cacheKey, { data: result, timestamp: now });
+    return result;
   } catch (err: unknown) {
     throw new Error(extractApiError(err));
   }

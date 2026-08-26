@@ -143,61 +143,68 @@ export function PendingDecisionCard({
               </span>
             </div>
             <span className={`vm-pending-redesign-badge ${tone}`}>{displayStatus}</span>
-            <div className="vm-pending-redesign-meta-stack">
-              <div className="vm-pending-redesign-host-row">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-                </svg>
-                <span className="vm-pending-redesign-host-text">
-                  {ut(lang, "host_prefix")}{" "}
-                  <span className="vm-pending-redesign-host-name">{hostName}</span>
-                </span>
-              </div>
-              {creatorName ? (
-                <div className="vm-pending-redesign-host-row">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                  </svg>
-                  <span className="vm-pending-redesign-host-text">
-                    {ut(lang, "creator_prefix")}{" "}
-                    <span className="vm-pending-redesign-host-name">{creatorName}</span>
-                  </span>
-                </div>
-              ) : null}
-              {company ? (
-                <div className="vm-pending-redesign-host-row">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                    <path d="M3 21h18" />
-                    <path d="M5 21V7l7-4 7 4v14" />
-                    <path d="M9 21v-6h6v6" />
-                  </svg>
-                  <span className="vm-pending-redesign-host-text">
-                    {ut(lang, "company_prefix")}{" "}
-                    <span className="vm-pending-redesign-host-name">{company}</span>
-                  </span>
-                </div>
-              ) : null}
-              {location ? (
-                <div className="vm-pending-redesign-host-row">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                    <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" />
-                    <circle cx="12" cy="10" r="2.5" />
-                  </svg>
-                  <span className="vm-pending-redesign-host-text">
-                    {ut(lang, "location_prefix")}{" "}
-                    <span className="vm-pending-redesign-host-name">{location}</span>
-                  </span>
-                </div>
-              ) : null}
-            </div>
           </div>
 
           <div className="vm-pending-redesign-time-block">
             <span className="vm-pending-redesign-id">{item.name}</span>
             <span className="vm-pending-redesign-time">{dateTimeLabel}</span>
           </div>
+        </div>
+
+        {/* Side-by-Side 2-Column Details Grid */}
+        <div className="vm-pending-redesign-meta-grid">
+          <div className="vm-pending-redesign-host-row">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+              <circle cx="12" cy="8" r="4" />
+              <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+            </svg>
+            <span className="vm-pending-redesign-host-text">
+              {ut(lang, "host_prefix")}{" "}
+              <span className="vm-pending-redesign-host-name">{hostName}</span>
+            </span>
+          </div>
+
+          {creatorName ? (
+            <div className="vm-pending-redesign-host-row">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              <span className="vm-pending-redesign-host-text">
+                {ut(lang, "creator_prefix")}{" "}
+                <span className="vm-pending-redesign-host-name">{creatorName}</span>
+              </span>
+            </div>
+          ) : (
+            <div className="vm-pending-redesign-host-row is-placeholder" />
+          )}
+
+          {company ? (
+            <div className="vm-pending-redesign-host-row">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <path d="M3 21h18" />
+                <path d="M5 21V7l7-4 7 4v14" />
+                <path d="M9 21v-6h6v6" />
+              </svg>
+              <span className="vm-pending-redesign-host-text">
+                {ut(lang, "company_prefix")}{" "}
+                <span className="vm-pending-redesign-host-name">{company}</span>
+              </span>
+            </div>
+          ) : null}
+
+          {location ? (
+            <div className="vm-pending-redesign-host-row">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              <span className="vm-pending-redesign-host-text">
+                {ut(lang, "location_prefix")}{" "}
+                <span className="vm-pending-redesign-host-name">{location}</span>
+              </span>
+            </div>
+          ) : null}
         </div>
 
         <div className="vm-pending-redesign-divider" />
