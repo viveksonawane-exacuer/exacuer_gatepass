@@ -21,7 +21,8 @@ function baseProps({ size = 22, className, ...rest }: IconProps) {
 export function IconHome(props: IconProps) {
   return (
     <svg {...baseProps(props)}>
-      <path d="M3 10.5L12 3l9 7.5V20a2 2 0 0 1-2 2h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2v-9.5z" />
+      <path d="m3 9.5 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   );
 }
@@ -31,7 +32,7 @@ export function IconCheckIn(props: IconProps) {
     <svg {...baseProps(props)}>
       <circle cx="12" cy="8" r="4" />
       <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-      <circle cx="18" cy="18" r="3" fill="#6366f1" stroke="none" />
+      <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
       <path d="M18 16.5v3M16.5 18h3" stroke="#fff" strokeWidth="1.5" />
     </svg>
   );
@@ -50,7 +51,8 @@ export function IconInside(props: IconProps) {
   return (
     <svg {...baseProps(props)}>
       <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   );
 }
@@ -67,9 +69,11 @@ export function IconHistory(props: IconProps) {
 export function IconApprovals(props: IconProps) {
   return (
     <svg {...baseProps(props)}>
-      <path d="M16 3v4M8 3v4M3 11h18" />
-      <rect x="3" y="5" width="18" height="16" rx="3" />
-      <path d="m9 16 2 2 4-4" />
+      <rect x="3" y="4" width="18" height="18" rx="2.5" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <path d="m9 16 2 2 4-4" strokeWidth="2.2" />
     </svg>
   );
 }
@@ -161,9 +165,8 @@ export function IconAlertShield(props: IconProps) {
 export function IconReports(props: IconProps) {
   return (
     <svg {...baseProps(props)}>
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
+      <path d="M3 3v18h18" strokeWidth="2" />
+      <path d="M18 17V9M13 17V5M8 17v-3" strokeWidth="2.2" />
     </svg>
   );
 }

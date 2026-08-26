@@ -46,8 +46,6 @@ export function FloatingNavbar() {
   });
 
   const validIndex = activeIndex >= 0 ? activeIndex : 0;
-  const activeTab = tabs[validIndex];
-  const isRegularTabActive = Boolean(activeTab && !activeTab.fab && activeTab.to !== "/check-in");
 
   const handleFabClick = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -65,17 +63,16 @@ export function FloatingNavbar() {
     <nav className="vm-dock" aria-label="Visitor Management Navigation">
       {fabBurst && <div className="vm-fab-fullscreen-zoom-circle" aria-hidden="true" />}
       <div className="vm-dock-inner">
-        {/* Horizontal Sliding Liquid Water-Drop Droplet */}
+        {/* Horizontal Traveling Water-Drop Liquid Glow */}
         <div
-          className="vm-dock-sliding-droplet"
+          className="vm-dock-liquid-slider"
           style={{
             width: `${100 / tabs.length}%`,
             transform: `translateX(${validIndex * 100}%)`,
-            opacity: isRegularTabActive ? 1 : 0,
           }}
           aria-hidden="true"
         >
-          <div className="vm-dock-droplet-bubble" />
+          <div className="vm-dock-waterdrop-glow" />
         </div>
 
         {tabs.map((tab, idx) => {

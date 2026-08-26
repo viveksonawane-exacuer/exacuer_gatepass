@@ -63,14 +63,15 @@ export function clearApiCache() {
   apiMemoryCache.clear();
 }
 
-async function callMethod<T>(path: string, args?: Record<string, unknown>, useCache = true): Promise<T> {
-  const cacheKey = `m:${path}:${JSON.stringify(args ?? {})}`;
+export async function callMethod<T>(path: string, args?: Record<string, unknown>, useCache = true): Promise<T> {
+  const fullPath = path.startsWith("visitor_management.") ? path : `${METHOD}.${path}`;
+  const cacheKey = `m:${fullPath}:${JSON.stringify(args ?? {})}`;
   const now = Date.now();
   if (useCache) {
     const hit = apiMemoryCache.get(cacheKey);
     if (hit && now - hit.timestamp < 15000) {
       // Revalidate in background
-      void apiClient.post(`/api/method/${METHOD}.${path}`, args ?? {}).then(({ data }) => {
+      void apiClient.post(`/api/method/${fullPath}`, args ?? {}).then(({ data }) => {
         apiMemoryCache.set(cacheKey, { data: data.message, timestamp: Date.now() });
       }).catch(() => {});
       return hit.data as T;
@@ -78,7 +79,7 @@ async function callMethod<T>(path: string, args?: Record<string, unknown>, useCa
   }
 
   try {
-    const { data } = await apiClient.post(`/api/method/${METHOD}.${path}`, args ?? {});
+    const { data } = await apiClient.post(`/api/method/${fullPath}`, args ?? {});
     if (useCache) {
       apiMemoryCache.set(cacheKey, { data: data.message, timestamp: now });
     }

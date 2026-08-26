@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { dashboardApi, notificationApi, visitorApi } from "@/api/vms";
+import { callMethod, dashboardApi, notificationApi, visitorApi } from "@/api/vms";
 import { useAuth } from "@/context/AuthContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
+import { useAppTheme } from "@/context/AppThemeContext";
 import { useVmsRealtime } from "@/hooks/useVmsRealtime";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { PwaAppUpdateButton } from "@/components/ui/PwaAppUpdateButton";
@@ -43,13 +44,40 @@ export function HeaderBar({
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { lang } = useAppLanguage();
+  const { themeColor, setThemeColor, options: themeOptions } = useAppTheme();
   const [popup, setPopup] = useState<PopupKind>("none");
   const [pendingCount, setPendingCount] = useState(0);
+  const [customPhoto, setCustomPhoto] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLElement>(null);
 
-  const photo = resolveUserImage(user?.user_image);
+  const photo = customPhoto || resolveUserImage(user?.user_image);
   const displayName = user?.full_name || user?.user || "User";
   const canSeeNotifications = hasCapability(user, "notifications");
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoBusy(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        setCustomPhoto(dataUrl);
+        try {
+          if (user) user.user_image = dataUrl;
+          await callMethod("visitor_management.auth.session.update_user_photo", {
+            photo_data: dataUrl,
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+      setPhotoBusy(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const loadPendingCount = useCallback(async () => {
     if (authLoading || !isAuthenticated || !canSeeNotifications) {
@@ -58,7 +86,7 @@ export function HeaderBar({
     }
     try {
       const [list, alerts] = await Promise.all([
-        visitorApi.listDetailed(200, userHostScopeFilters(user)),
+        visitorApi.listDetailed(100, userHostScopeFilters(user)),
         notificationApi.list(40).catch(() => []),
       ]);
       const pending = (list || []).filter(
@@ -91,9 +119,19 @@ export function HeaderBar({
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       const target = e.target as Node | null;
-      if (!rootRef.current || !target) return;
-      if (target instanceof Element && target.closest(".vm-lang-confirm-root")) return;
-      if (!rootRef.current.contains(target)) setPopup("none");
+      if (!target) return;
+      if (target instanceof Element && (
+        target.closest(".vm-portal-popup-wrapper") ||
+        target.closest(".vm-topbar-popup") ||
+        target.closest(".vm-profile-popup") ||
+        target.closest(".vm-lang-confirm-root") ||
+        target.closest(".vm-header-profile-btn")
+      )) {
+        return;
+      }
+      if (rootRef.current && !rootRef.current.contains(target)) {
+        setPopup("none");
+      }
     }
     if (popup !== "none") {
       document.addEventListener("mousedown", onDocClick);
@@ -173,7 +211,7 @@ export function HeaderBar({
               </button>
             ) : null}
 
-            {/* Profile Dropdown Portaled to Document Body for full-screen blur with elevated profile button */}
+            {/* Profile Dropdown Portaled to Document Body */}
             {popup === "profile" && typeof document !== "undefined"
               ? createPortal(
                   <div className="vm-portal-popup-wrapper">
@@ -184,7 +222,7 @@ export function HeaderBar({
                       onClick={() => setPopup("none")}
                     />
 
-                    {/* Elevated Profile Button on top of blur scrim */}
+                    {/* Elevated Profile Button */}
                     {showProfile && (
                       <button
                         type="button"
@@ -202,16 +240,65 @@ export function HeaderBar({
 
                     <div className="vm-topbar-popup vm-profile-popup vm-profile-portal-popup" role="dialog" aria-label="Profile">
                       <div className="vm-profile-popup-user">
-                        <div className="vm-avatar-btn is-static">
+                        {/* Interactive Profile Photo Container */}
+                        <div
+                          className="vm-profile-popup-avatar-wrap"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="Tap to change profile photo"
+                        >
                           {photo ? (
                             <img src={photo} alt="" className="vm-avatar-img" />
                           ) : (
                             <span className="vm-avatar-fallback">{initials(displayName)}</span>
                           )}
+                          <div className="vm-avatar-upload-badge">
+                            {photoBusy ? "..." : "📷"}
+                          </div>
                         </div>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handlePhotoUpload}
+                        />
+
                         <div className="vm-profile-popup-user-copy">
                           <strong>{displayName}</strong>
                           <span>{user?.email || user?.user || "Signed in"}</span>
+                          <button
+                            type="button"
+                            className="vm-avatar-change-link"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            {photoBusy ? "Uploading..." : "Change Photo"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Theme Accent Color Switcher Section */}
+                      <div className="vm-profile-theme-section">
+                        <div className="vm-profile-theme-title">
+                          <span>🎨 Theme Accent Color</span>
+                          <span className="vm-profile-theme-active-name">{themeOptions.find((t) => t.id === themeColor)?.name}</span>
+                        </div>
+                        <div className="vm-theme-swatches-row">
+                          {themeOptions.map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              className={`vm-theme-swatch-btn${themeColor === opt.id ? " is-active" : ""}`}
+                              style={{ background: opt.previewGradient }}
+                              onClick={() => setThemeColor(opt.id)}
+                              aria-label={`Select ${opt.name} theme`}
+                              title={opt.name}
+                            >
+                              {themeColor === opt.id && <span className="vm-theme-swatch-check">✓</span>}
+                            </button>
+                          ))}
                         </div>
                       </div>
 

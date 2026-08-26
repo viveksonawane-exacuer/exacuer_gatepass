@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 from frappe.utils import cstr
 
 from visitor_management.auth.permissions import (
@@ -102,3 +103,27 @@ def get_profile(user: str | None = None) -> dict:
 		"can_approve": user_can_approve(user),
 		"csrf_token": cstr(frappe.sessions.get_csrf_token()),
 	}
+
+
+@frappe.whitelist()
+def update_user_photo(photo_data: str) -> dict:
+	user = frappe.session.user
+	if not user or user == "Guest":
+		frappe.throw(_("Not authenticated"), frappe.PermissionError)
+
+	if photo_data and photo_data.startswith("data:image"):
+		import base64
+		from frappe.utils.file_manager import save_file
+		header, encoded = photo_data.split(",", 1)
+		file_content = base64.b64decode(encoded)
+		file_name = f"profile_{user}_{frappe.utils.now_datetime().strftime('%Y%m%d%H%M%S')}.jpg"
+		_file = save_file(file_name, file_content, "User", user, is_private=0)
+		frappe.db.set_value("User", user, "user_image", _file.file_url)
+		frappe.db.commit()
+		return {"success": True, "user_image": _file.file_url}
+	elif photo_data:
+		frappe.db.set_value("User", user, "user_image", photo_data)
+		frappe.db.commit()
+		return {"success": True, "user_image": photo_data}
+
+	return {"success": False, "error": "Invalid photo"}

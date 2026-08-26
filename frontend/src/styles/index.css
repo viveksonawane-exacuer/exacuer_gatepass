@@ -3783,9 +3783,26 @@ a {
   position: fixed !important;
   top: max(4.15rem, calc(env(safe-area-inset-top, 0px) + 3.75rem)) !important;
   right: max(0.85rem, calc((100vw - 480px) / 2 + 0.85rem)) !important;
-  z-index: 10 !important;
+  z-index: 100 !important;
   pointer-events: auto !important;
-  width: min(295px, calc(100vw - 1.7rem)) !important;
+  width: min(305px, calc(100vw - 1.5rem)) !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  padding: 0.65rem 0.75rem !important;
+  box-sizing: border-box !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.vm-profile-portal-popup::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.vm-profile-portal-popup * {
+  pointer-events: auto;
 }
 
 @keyframes vmScrimFadeIn {
@@ -3891,19 +3908,25 @@ a {
   position: absolute;
   top: calc(100% + 0.65rem);
   right: 0;
-  width: min(292px, calc(100vw - 1.75rem));
-  max-height: min(68dvh, 420px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  width: min(305px, calc(100vw - 1.5rem));
+  max-height: none;
+  overflow: visible;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
-  padding: 0.85rem;
+  padding: 0.65rem 0.75rem;
   z-index: 150;
   animation: vm-pop-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: top right;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.vm-topbar-popup::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .vm-profile-popup::before {
@@ -5432,8 +5455,8 @@ a {
 .vm-profile-popup-user {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0.85rem;
+  gap: 0.55rem;
+  margin-bottom: 0.35rem;
   min-width: 0;
 }
 
@@ -5444,7 +5467,8 @@ a {
 
 .vm-profile-popup-user strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
+  font-weight: 700;
   color: #0f172a;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5453,8 +5477,8 @@ a {
 
 .vm-profile-popup-user span {
   display: block;
-  font-size: 0.72rem;
-  color: #1e293b;
+  font-size: 0.68rem;
+  color: #475569;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5464,28 +5488,25 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
   border-top: 1px solid #eef2f7;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #0f172a;
 }
 
-/* Interactive glowing theme switch — light / dark */
-
-
 .vm-profile-popup-action {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.55rem;
   width: 100%;
-  margin-top: 0.45rem;
-  padding: 0.65rem 0.55rem;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.55rem;
   border: 1px solid #e8edf2;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -5498,14 +5519,14 @@ a {
 }
 
 .vm-profile-popup-action-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 10px;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   background: #eff6ff;
-  color: #4f46e5;
-  font-size: 0.85rem;
+  color: var(--vms-primary, #4f46e5);
+  font-size: 0.82rem;
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -5513,49 +5534,57 @@ a {
 .vm-profile-popup-action-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.08rem;
+  gap: 0.05rem;
   min-width: 0;
   flex: 1;
 }
 
 .vm-profile-popup-action-copy strong {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #0f172a;
 }
 
 .vm-profile-popup-action-copy span {
-  font-size: 0.7rem;
-  color: #1e293b;
+  font-size: 0.66rem;
+  color: #64748b;
 }
 
 .vm-profile-popup-action-trail {
-  color: #1e293b;
-  font-size: 0.9rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
 }
 
 .vm-profile-popup-settings {
   width: 100%;
-  margin-top: 0.65rem;
-  height: 44px;
+  margin-top: 0.35rem;
+  height: 38px;
   border-radius: 12px;
   border: 0;
-  background: #4f46e5;
+  background: var(--vms-primary, #4f46e5);
   color: #fff;
   font: inherit;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   cursor: pointer;
+  box-shadow: 0 4px 14px var(--vms-theme-glow, rgba(79, 70, 229, 0.3));
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.vm-profile-popup-settings:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .vm-profile-popup-update {
-  margin-top: 0.45rem;
+  margin-top: 0.25rem;
   border-color: #93c5fd;
   background: #eff6ff;
 }
 
 .vm-profile-popup-update .vm-profile-popup-action-icon {
   background: #dbeafe;
-  color: #4f46e5;
+  color: var(--vms-primary, #4f46e5);
 }
 
 .vm-profile-popup-update:disabled {
@@ -5566,21 +5595,21 @@ a {
 .vm-profile-popup-setup {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.55rem;
   width: 100%;
-  margin: 0.65rem 0 0.35rem;
-  padding: 0.7rem 0.75rem;
+  margin: 0.25rem 0;
+  padding: 0.45rem 0.55rem;
   border: 1px solid #fdba74;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #fff7ed;
   text-align: left;
   cursor: pointer;
 }
 
 .vm-profile-popup-setup-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: #ffedd5;
   color: #c2410c;
   display: grid;
@@ -5590,19 +5619,20 @@ a {
 
 .vm-profile-popup-setup-copy {
   display: grid;
-  gap: 0.1rem;
+  gap: 0.05rem;
   min-width: 0;
 }
 
 .vm-profile-popup-setup-copy strong {
-  font-size: 0.84rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #9a3412;
 }
 
 .vm-profile-popup-setup-copy span {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   color: #c2410c;
-  line-height: 1.35;
+  line-height: 1.2;
 }
 
 .vm-settings-row--setup {
@@ -6554,12 +6584,14 @@ a {
 }
 
 .vm-reports-tab.is-active {
-  background: #4f46e5;
-  color: #ffffff;
+  background: var(--vms-primary, #4f46e5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px var(--vms-theme-glow, rgba(79, 70, 229, 0.25)) !important;
 }
 
 .vm-reports-tab.is-active .vm-reports-tab-count {
   opacity: 1;
+  color: #ffffff !important;
 }
 
 .vm-reports-page .vm-reports-tab {
@@ -9745,22 +9777,7 @@ button.vm-photo-preview.is-clickable:active {
   transition: all 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.vm-dock-tab {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  color: #1e293b !important;
-  min-width: 0;
-  -webkit-tap-highlight-color: transparent;
-  transition: all 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.vm-dock-sliding-droplet {
+.vm-dock-liquid-slider {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -9770,31 +9787,35 @@ button.vm-photo-preview.is-clickable:active {
   justify-content: center;
   pointer-events: none;
   z-index: 1;
-  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.vm-dock-droplet-bubble {
-  width: 48px;
-  height: 48px;
+.vm-dock-waterdrop-glow {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: radial-gradient(circle at 45% 45%, rgba(216, 180, 254, 0.45) 0%, rgba(192, 132, 252, 0.28) 45%, rgba(147, 51, 234, 0.12) 75%, transparent 100%);
-  box-shadow: 0 4px 22px rgba(168, 85, 247, 0.32), 0 0 28px rgba(192, 132, 252, 0.22);
-  animation: vmHorizontalDropletMorph 2.6s ease-in-out infinite alternate;
+  border: none !important;
+  background: radial-gradient(circle, color-mix(in srgb, var(--vms-primary, #4f46e5) 20%, transparent) 0%, color-mix(in srgb, var(--vms-primary, #4f46e5) 8%, transparent) 45%, transparent 72%) !important;
+  filter: blur(4px);
+  pointer-events: none;
 }
 
-@keyframes vmHorizontalDropletMorph {
-  0% {
-    transform: scale(0.96, 1.04);
-    border-radius: 46% 54% 52% 48% / 48% 46% 54% 52%;
-  }
-  50% {
-    transform: scale(1.08, 0.94);
-    border-radius: 54% 46% 48% 52% / 52% 54% 46% 48%;
-  }
-  100% {
-    transform: scale(0.96, 1.04);
-    border-radius: 48% 52% 54% 46% / 46% 48% 52% 54%;
-  }
+.vm-dock-tab {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #64748b !important;
+  min-width: 0;
+  border: none !important;
+  background: transparent !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 0.1rem 0;
 }
 
 .vm-dock-item-stack {
@@ -9802,37 +9823,45 @@ button.vm-photo-preview.is-clickable:active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.15rem 0;
+  gap: 0.12rem;
+  padding: 0.1rem 0;
   width: 100%;
 }
 
+.vm-dock-tab-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none !important;
+  border-radius: 50%;
+  color: #64748b;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .vm-dock-tab.is-active .vm-dock-tab-icon {
-  color: #7c3aed !important;
-  transform: translateY(-2px);
-  animation: vmWaterDropSplash 0.48s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  color: var(--vms-primary, #4f46e5) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 8px var(--vms-theme-glow, rgba(79, 70, 229, 0.35)));
+  transform: translateY(-2px) scale(1.08);
+}
+
+.vm-dock-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1;
+  margin-top: 0.1rem;
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
 .vm-dock-tab.is-active .vm-dock-label {
-  color: #7c3aed !important;
-  font-weight: 800 !important;
-  transform: scale(1.04);
-  transition: all 0.25s ease;
-}
-
-@keyframes vmWaterDropSplash {
-  0% {
-    transform: scale(0.68) translateY(4px);
-  }
-  45% {
-    transform: scale(1.22, 0.82) translateY(-4px);
-  }
-  75% {
-    transform: scale(0.92, 1.1) translateY(-1px);
-  }
-  100% {
-    transform: scale(1) translateY(-2px);
-  }
+  color: var(--vms-primary, #4f46e5) !important;
+  font-weight: 700 !important;
 }
 
 /* Center + Add Entry FAB Button with Purple-Magenta Glow */
@@ -17214,12 +17243,14 @@ body.barcode-scanner-active {
 }
 
 .vm-approvals-page .vm-reports-tab.is-active {
+  background: var(--vms-primary, #4f46e5) !important;
   font-weight: 700;
-  color: #ffffff;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px var(--vms-theme-glow, rgba(79, 70, 229, 0.25)) !important;
 }
 
 .vm-approvals-page .vm-reports-tab.is-active .vm-reports-tab-count {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .vm-approvals-page .vm-approvals-filter-bar {
@@ -18554,11 +18585,13 @@ body:has(.vm-auth-page) {
 
 /* Top Header Bar */
 .vm-topbar {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: inset 0 3px 8px rgba(15, 23, 42, 0.04),
+              inset 0 -3px 8px rgba(15, 23, 42, 0.03),
+              inset 0 0 18px color-mix(in srgb, var(--vms-primary, #4f46e5) 8%, transparent) !important;
   padding-top: max(0.85rem, calc(env(safe-area-inset-top, 0px) + 0.45rem)) !important;
   padding-bottom: 0.65rem !important;
   padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
@@ -18567,6 +18600,7 @@ body:has(.vm-auth-page) {
   top: 0;
   z-index: 40;
   box-sizing: border-box;
+  transition: box-shadow 0.35s ease, border-color 0.35s ease, background 0.35s ease;
 }
 
 .vm-topbar-inner {
@@ -19787,7 +19821,7 @@ body:has(.vm-auth-page) {
 }
 
 .vm-dock-tab.is-active {
-  color: #4f46e5 !important;
+  color: var(--vms-primary, #4f46e5) !important;
 }
 
 .vm-dock-item-stack {
@@ -19810,7 +19844,7 @@ body:has(.vm-auth-page) {
 }
 
 .vm-dock-tab.is-active .vm-dock-tab-icon {
-  color: #4f46e5 !important;
+  color: var(--vms-primary, #4f46e5) !important;
 }
 
 .vm-dock-label {
@@ -19825,7 +19859,7 @@ body:has(.vm-auth-page) {
 }
 
 .vm-dock-tab.is-active .vm-dock-label {
-  color: #4f46e5 !important;
+  color: var(--vms-primary, #4f46e5) !important;
   font-weight: 700 !important;
 }
 
@@ -19842,8 +19876,8 @@ body:has(.vm-auth-page) {
   width: 44px !important;
   height: 44px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%) !important;
-  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.45) !important;
+  background: var(--vms-fab-gradient, linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%)) !important;
+  box-shadow: 0 6px 18px var(--vms-theme-glow, rgba(79, 70, 229, 0.45)) !important;
   color: #ffffff !important;
   display: grid !important;
   place-items: center !important;
@@ -19853,6 +19887,156 @@ body:has(.vm-auth-page) {
 
 .vm-dock-tab.is-add:active .vm-dock-add-btn {
   transform: scale(0.92) !important;
+}
+
+/* Profile Photo Interactive Avatar & Upload Badge */
+.vm-profile-popup-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.vm-profile-avatar-container.is-clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.vm-avatar-upload-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--vms-primary, #4f46e5);
+  color: #ffffff;
+  font-size: 0.65rem;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.vm-avatar-change-link {
+  background: none;
+  border: none;
+  color: var(--vms-primary, #4f46e5);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0;
+  margin-top: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Theme Accent Color Swatches & Modal Grid */
+.vm-profile-theme-section {
+  padding: 0.75rem 0.85rem;
+  background: #f8fafc;
+  border-radius: 14px;
+  margin: 0.45rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  border: 1px solid #f1f5f9;
+}
+
+.vm-profile-theme-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.vm-profile-theme-active-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--vms-primary, #4f46e5);
+}
+
+.vm-theme-swatches-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 3px 1px;
+}
+
+.vm-theme-swatch-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.vm-theme-swatch-btn.is-active {
+  transform: scale(1.18);
+  border-color: #0f172a;
+}
+
+.vm-theme-swatch-check {
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.vm-theme-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.vm-theme-card-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.vm-theme-card-option.is-active {
+  border-color: var(--vms-primary, #4f46e5);
+  background: var(--vms-primary-light, #eef2ff);
+  box-shadow: 0 4px 14px var(--vms-theme-glow, rgba(79, 70, 229, 0.15));
+}
+
+.vm-theme-card-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vm-theme-card-check {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.vm-theme-card-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 
@@ -21949,5 +22133,205 @@ body:has(.vm-auth-page) {
   background: #f1f5f9;
   color: #64748b;
 }
+
+/* ==========================================================================
+   SYSTEM-WIDE DYNAMIC THEME ENGINE (100% Theme Color Reactivity)
+   Applies selected theme color (Indigo, Purple, Blue, Emerald, Orange, Rose, Slate)
+   across all buttons, icons, pills, cards, focus rings, and accents!
+   ========================================================================== */
+
+/* 1. Primary Buttons & Action Triggers */
+.vm-btn-primary,
+.btn-primary,
+.vm-submit-btn,
+.vm-action-btn.is-primary,
+.vm-profile-popup-settings,
+.vm-ticket-action-btn.is-print,
+.vm-checkin-continue-btn,
+.vm-step-btn-primary {
+  background: var(--vms-primary, #4f46e5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px var(--vms-theme-glow, rgba(79, 70, 229, 0.3)) !important;
+  border-color: var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-btn-primary:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.vm-submit-btn:hover:not(:disabled),
+.vm-checkin-continue-btn:hover:not(:disabled) {
+  background: var(--vms-primary-hover, #4338ca) !important;
+}
+
+/* 2. Floating Action Button '+' and Dock Traveling Water-Drop */
+.vm-dock-add-btn {
+  background: var(--vms-fab-gradient, linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%)) !important;
+  box-shadow: 0 6px 18px var(--vms-theme-glow, rgba(79, 70, 229, 0.45)) !important;
+}
+
+.vm-dock-liquid-slider {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+.vm-dock-waterdrop-glow {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: radial-gradient(circle, color-mix(in srgb, var(--vms-primary, #4f46e5) 20%, transparent) 0%, color-mix(in srgb, var(--vms-primary, #4f46e5) 8%, transparent) 45%, transparent 72%) !important;
+  filter: blur(4px) !important;
+  box-shadow: none !important;
+}
+
+/* 3. Dock Active Tab & Icons (Clean & Borderless) */
+.vm-dock-tab {
+  position: relative !important;
+  z-index: 3 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.vm-dock-tab-icon {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.vm-dock-tab.is-active .vm-dock-tab-icon {
+  color: var(--vms-primary, #4f46e5) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 8px var(--vms-theme-glow, rgba(79, 70, 229, 0.35))) !important;
+}
+
+.vm-dock-tab.is-active,
+.vm-dock-tab.is-active .vm-dock-label {
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+/* 4. Topbar Badges, Active Buttons & Upload Links */
+.vm-header-profile-btn.is-active,
+.vm-portal-elevated-btn {
+  border-color: var(--vms-primary, #4f46e5) !important;
+  box-shadow: 0 0 0 3px var(--vms-primary-light, #eef2ff), 0 4px 14px var(--vms-theme-glow, rgba(79, 70, 229, 0.25)) !important;
+}
+
+.vm-bell-dot,
+.vm-company-live-indicator {
+  background: var(--vms-primary, #4f46e5) !important;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 8px var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-avatar-upload-badge {
+  background: var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-avatar-change-link {
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+/* 5. Approvals / Pending Tabs, Segmented Controls & Filters */
+.vm-reports-tab.is-active,
+.vm-reports-tab-btn.is-active,
+.vm-approvals-page .vm-reports-tab.is-active,
+.vm-segmented-pills-bar button.is-active,
+.vm-segment-btn.is-active,
+.vm-filter-pill.is-active,
+.vm-tab-pill.is-active {
+  background: var(--vms-primary, #4f46e5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px var(--vms-theme-glow, rgba(79, 70, 229, 0.25)) !important;
+}
+
+.vm-reports-tab.is-active .vm-reports-tab-count,
+.vm-approvals-page .vm-reports-tab.is-active .vm-reports-tab-count {
+  color: #ffffff !important;
+}
+
+.vm-approvals-sort-option.is-active {
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-approvals-sort-dir {
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-sort-icon-btn.is-active,
+.vm-approvals-page .vm-sort-icon-btn.is-active {
+  border-color: var(--vms-primary, #4f46e5) !important;
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+/* 6. Form Focus States */
+input:focus,
+select:focus,
+textarea:focus,
+.vm-input:focus,
+.vm-search-input:focus,
+.vm-select:focus {
+  border-color: var(--vms-primary, #4f46e5) !important;
+  box-shadow: 0 0 0 3px var(--vms-primary-light, #eef2ff), 0 0 0 1px var(--vms-primary, #4f46e5) !important;
+  outline: none !important;
+}
+
+/* 7. Profile Cards, Badges, & Role Chips */
+.vm-profile-verified-badge,
+.vm-verified-badge {
+  background: var(--vms-primary, #4f46e5) !important;
+  color: #ffffff !important;
+}
+
+.vm-profile-role-pill {
+  background: var(--vms-primary-light, #eef2ff) !important;
+  color: var(--vms-primary, #4f46e5) !important;
+  border-color: var(--vms-primary-border, #c7d2fe) !important;
+}
+
+/* 8. Stage Overview, Badges, & Timeline Accents */
+.vm-stage-card.is-active,
+.vm-status-card.is-active {
+  border-color: var(--vms-primary-border, #c7d2fe) !important;
+}
+
+.vm-stage-report-row.tone-blue .vm-stage-report-dot,
+.vm-stage-report-dot.is-active {
+  background: var(--vms-primary, #4f46e5) !important;
+}
+
+.vm-timeline-now-pill,
+.vm-timeline-hour-badge {
+  background: var(--vms-primary, #4f46e5) !important;
+  color: #ffffff !important;
+}
+
+.vm-timeline-current-dot {
+  background: var(--vms-primary, #4f46e5) !important;
+  box-shadow: 0 0 0 4px var(--vms-primary-light, #eef2ff) !important;
+}
+
+.vm-time-pill {
+  color: var(--vms-primary, #4f46e5) !important;
+  background: var(--vms-primary-light, #eef2ff) !important;
+}
+
+.vm-view-all-link,
+.vm-link-accent {
+  color: var(--vms-primary, #4f46e5) !important;
+}
+
+/* 9. Hero Card & Ambient Gradient Glows */
+.vm-home-ambient-glow {
+  background: var(--vms-gradient-ambient, linear-gradient(180deg, rgba(79, 70, 229, 0.16) 0%, rgba(99, 102, 241, 0.08) 35%, rgba(248, 250, 252, 0) 100%)) !important;
+}
+
+.vm-gradient-accent-card {
+  background: var(--vms-accent-gradient, linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)) !important;
+}
+
+.vm-hero-mesh {
+  background: var(--vms-gradient-mesh, linear-gradient(135deg, #4f46e5 0%, #6366f1 38%, #818cf8 70%, #06b6d4 100%)) !important;
+}
+
 
 

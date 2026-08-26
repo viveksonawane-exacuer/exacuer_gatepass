@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { useAppLanguage } from "@/context/AppLanguageContext";
+import { useAppTheme } from "@/context/AppThemeContext";
 import { NotificationSetupPrompt } from "@/components/alerts/NotificationSetupPrompt";
 import { PwaInstallButton } from "@/components/ui/PwaInstallButton";
 import { applyAppUpdate, isPwaInstalled } from "@/lib/pwaUpdate";
@@ -80,8 +81,10 @@ export function SettingsGroups({
   onToggleProfileCard,
 }: SettingsGroupsProps) {
   const { lang, label, options, requestLangChange } = useAppLanguage();
+  const { themeColor, setThemeColor, options: themeOptions, activeTheme } = useAppTheme();
   const { installed } = usePwaInstall();
   const [langModalOpen, setLangModalOpen] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
   const showAppUpdate = installed || isPwaInstalled() || isNativePlatform();
 
   const handleSelectLang = (code: (typeof options)[number]["code"]) => {
@@ -93,6 +96,13 @@ export function SettingsGroups({
     <div className="vm-settings-modern-stack">
       {/* Group 1: Preferences & Appearance */}
       <SettingsGroupSection title={ut(lang, "appearance")} icon="🎨">
+        <SettingsRowItem
+          icon="🎨"
+          label="App Theme Color"
+          value={activeTheme.name}
+          onClick={() => setThemeModalOpen(true)}
+        />
+
         <SettingsRowItem
           icon="🌐"
           label={ut(lang, "language")}
@@ -129,6 +139,51 @@ export function SettingsGroups({
           />
         ) : null}
       </SettingsGroupSection>
+
+      {/* Clean iOS Theme Color Picker Modal */}
+      {themeModalOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div className="vm-lang-modal-root" role="dialog" aria-modal="true" aria-label="Select Theme Color">
+              <div className="vm-lang-modal-backdrop" onClick={() => setThemeModalOpen(false)} aria-hidden />
+              <div className="vm-lang-modal-sheet">
+                <div className="vm-lang-modal-header">
+                  <div className="vm-lang-modal-title">
+                    <span className="vm-lang-modal-icon">🎨</span>
+                    <strong>Select Theme Color</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="vm-lang-modal-close"
+                    onClick={() => setThemeModalOpen(false)}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="vm-theme-modal-grid">
+                  {themeOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`vm-theme-card-option${themeColor === opt.id ? " is-active" : ""}`}
+                      onClick={() => {
+                        setThemeColor(opt.id);
+                        setThemeModalOpen(false);
+                      }}
+                    >
+                      <div className="vm-theme-card-circle" style={{ background: opt.previewGradient }}>
+                        {themeColor === opt.id && <span className="vm-theme-card-check">✓</span>}
+                      </div>
+                      <span className="vm-theme-card-name">{opt.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {/* Clean iOS Language Picker Modal */}
       {langModalOpen && typeof document !== "undefined"
