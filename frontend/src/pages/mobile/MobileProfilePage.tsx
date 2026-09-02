@@ -66,8 +66,8 @@ export function MobileProfilePage() {
   }, [user?.user]);
 
   return (
-    <div className="vm-profile-page-root">
-      <main className="vm-profile-container">
+    <div className="ds-profile-page">
+      <main className="ds-profile-container">
         {showProfileCard ? (
           <ProfileHeroCard
             name={name}
@@ -84,23 +84,25 @@ export function MobileProfilePage() {
           onToggleProfileCard={() => setShowProfileCard((prev) => !prev)}
         />
 
-        <div className="vm-profile-session-actions">
+        <div className="ds-profile-session">
           {isAuthenticated || user?.verified ? (
             <button
               type="button"
-              className="vm-profile-logout-btn"
+              className="ds-profile-logout-btn"
               onClick={() => void logout()}
             >
-              <span className="vm-profile-logout-icon">🚪</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
               <span>{ut(lang, "logout")}</span>
             </button>
           ) : (
-            <Link to="/" className="vm-btn-primary">
+            <Link to="/" className="ds-btn-primary">
               {ut(lang, "sign_in")}
             </Link>
           )}
 
-          <div className="vm-profile-app-meta">
+          <div className="ds-profile-app-meta">
             <span>Exacuer GatePass VMS • v2.4.0</span>
             <span>Secured & Powered by Frappe Framework</span>
           </div>

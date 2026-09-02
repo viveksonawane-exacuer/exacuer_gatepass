@@ -13,6 +13,9 @@ import {
   type SavedInAppNotification,
 } from "@/services/localNotificationHistory";
 import { VisitorAvatar } from "@/components/ui/VisitorAvatar";
+import { EmptyState } from "@/components/design-system/EmptyState";
+import { NeedsAttentionBanner } from "@/components/design-system/NeedsAttentionBanner";
+import { SectionHeader } from "@/components/design-system/SectionHeader";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
@@ -31,6 +34,15 @@ function alertRoute(item: InAppNotification): string {
     subject: item.subject,
     body: item.email_content,
   });
+}
+
+function BellIcon({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
 }
 
 export function MobileNotificationsPage() {
@@ -144,160 +156,141 @@ export function MobileNotificationsPage() {
     navigate(alertRoute(item));
   };
 
-  const showMarkAll = (pending.length > 0 && unreadPending > 0) || unreadAlerts > 0 || unreadSaved > 0;
+  const showMarkAll =
+    (pending.length > 0 && unreadPending > 0) || unreadAlerts > 0 || unreadSaved > 0;
 
   return (
-    <div className="vm-home-page vm-notif-page">
-      <div className="vm-notif-page-toolbar">
-        <div className="vm-notif-page-summary">
-          <strong>Pending Approvals</strong>
-          <span className="vm-notif-popup-count">{loading ? "…" : pending.length}</span>
-        </div>
+    <div className="ds-notifications-page ds-stagger">
+      <NeedsAttentionBanner
+        count={unreadPending}
+        title="Pending approvals need action"
+        description="Review and approve visitor requests"
+      />
+
+      <div className="ds-notifications-toolbar">
+        <SectionHeader title="Pending Approvals" />
         {showMarkAll ? (
-          <button type="button" className="vm-notif-page-mark-read" onClick={() => void markAllRead()}>
+          <button type="button" className="ds-notifications-mark-read" onClick={() => void markAllRead()}>
             Mark all as read
           </button>
         ) : null}
       </div>
 
-      <main className="vm-notif-page-body">
+      <main className="ds-notifications-section">
         {loading ? (
-          <p className="vm-notif-popup-empty">Loading notifications…</p>
+          <EmptyState title="Loading notifications…" />
+        ) : pending.length === 0 ? (
+          <EmptyState
+            icon={<BellIcon />}
+            title="No pending approvals"
+            description="You're all caught up. New visitor alerts will appear here."
+          />
         ) : (
-          <>
-            {pending.length === 0 ? (
-              <div className="vm-notif-page-empty">
-                <div className="vm-notif-page-empty-icon" aria-hidden>
-                  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                  </svg>
-                </div>
-                <strong>No pending approvals</strong>
-                <p>You&apos;re all caught up. New visitor alerts will appear here.</p>
-              </div>
-            ) : (
-              <div className="vm-notif-page-card">
-                <ul className="vm-notif-list" role="list">
-                  {pending.map((item) => {
-                    const isUnread = !readIds.has(item.name);
-                    return (
-                      <li key={item.name}>
-                        <button
-                          type="button"
-                          className={`vm-notif-row${isUnread ? " is-unread" : " is-read"}`}
-                          onClick={() => openPending(item)}
-                        >
-                          <VisitorAvatar
-                            name={item.full_name || item.name}
-                            photo={item.photo}
-                            size={40}
-                            className="vm-notif-avatar avatar-orange"
-                          />
-                          <div className="vm-notif-copy">
-                            <strong>{item.full_name || item.name}</strong>
-                            <span>
-                              {item.person_to_meet_name || item.person_to_meet || "Awaiting assignment"}
-                            </span>
-                          </div>
-                          <span className="vm-notif-time">
-                            {formatTime(getCurrentStageTimestamp(item)) || "—"}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+          <div className="ds-notifications-card">
+            <ul className="ds-notifications-list" role="list">
+              {pending.map((item) => {
+                const isUnread = !readIds.has(item.name);
+                return (
+                  <li key={item.name}>
+                    <button
+                      type="button"
+                      className={`ds-notif-row${isUnread ? " is-unread" : ""}`}
+                      onClick={() => openPending(item)}
+                    >
+                      <VisitorAvatar
+                        name={item.full_name || item.name}
+                        photo={item.photo}
+                        size={40}
+                        className="vm-notif-avatar avatar-orange"
+                      />
+                      <div className="ds-notif-row__copy">
+                        <strong>{item.full_name || item.name}</strong>
+                        <span>
+                          {item.person_to_meet_name || item.person_to_meet || "Awaiting assignment"}
+                        </span>
+                      </div>
+                      <span className="ds-notif-row__time">
+                        {formatTime(getCurrentStageTimestamp(item)) || "—"}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
 
-                <button
-                  type="button"
-                  className="vm-notif-popup-footer"
-                  onClick={() => navigate("/approvals")}
-                >
-                  Open visitors queue ›
-                </button>
-              </div>
-            )}
-
-            {savedAlerts.length > 0 ? (
-              <section className="vm-notif-alerts-section" aria-label="In-app alerts">
-                <div className="vm-notif-page-toolbar vm-notif-alerts-toolbar">
-                  <div className="vm-notif-page-summary">
-                    <strong>In-App & Confirmation Alerts</strong>
-                    <span className="vm-notif-popup-count">{savedAlerts.length}</span>
-                  </div>
-                </div>
-                <div className="vm-notif-page-card">
-                  <ul className="vm-notif-list" role="list">
-                    {savedAlerts.map((item) => {
-                      const isUnread = !item.read;
-                      return (
-                        <li key={item.id}>
-                          <button
-                            type="button"
-                            className={`vm-notif-row${isUnread ? " is-unread" : " is-read"}`}
-                            onClick={() => openSavedAlert(item)}
-                          >
-                            <div className="vm-notif-alert-icon" aria-hidden>
-                              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                              </svg>
-                            </div>
-                            <div className="vm-notif-copy">
-                              <strong>{item.title}</strong>
-                              <span>{item.message || "Visitor check-in / update"}</span>
-                            </div>
-                            <span className="vm-notif-time">{formatTime(new Date(item.timestamp)) || "—"}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </section>
-            ) : null}
-
-            {alerts.length > 0 ? (
-              <section className="vm-notif-alerts-section" aria-label="Recent alerts">
-                <div className="vm-notif-page-toolbar vm-notif-alerts-toolbar">
-                  <div className="vm-notif-page-summary">
-                    <strong>Recent System Alerts</strong>
-                    <span className="vm-notif-popup-count">{alerts.length}</span>
-                  </div>
-                </div>
-                <div className="vm-notif-page-card">
-                  <ul className="vm-notif-list" role="list">
-                    {alerts.map((item) => {
-                      const isUnread = !item.read;
-                      return (
-                        <li key={item.name}>
-                          <button
-                            type="button"
-                            className={`vm-notif-row${isUnread ? " is-unread" : " is-read"}`}
-                            onClick={() => void openAlert(item)}
-                          >
-                            <div className="vm-notif-alert-icon" aria-hidden>
-                              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                              </svg>
-                            </div>
-                            <div className="vm-notif-copy">
-                              <strong>{item.subject || "Visitor update"}</strong>
-                              <span>{item.email_content || item.document_name || "—"}</span>
-                            </div>
-                            <span className="vm-notif-time">{formatTime(item.creation) || "—"}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </section>
-            ) : null}
-          </>
+            <button
+              type="button"
+              className="ds-notifications-footer-btn"
+              onClick={() => navigate("/approvals")}
+            >
+              Open visitors queue ›
+            </button>
+          </div>
         )}
+
+        {savedAlerts.length > 0 ? (
+          <section className="ds-notifications-section" aria-label="In-app alerts">
+            <SectionHeader title="In-App & Confirmation Alerts" />
+            <div className="ds-notifications-card">
+              <ul className="ds-notifications-list" role="list">
+                {savedAlerts.map((item) => {
+                  const isUnread = !item.read;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className={`ds-notif-row${isUnread ? " is-unread" : ""}`}
+                        onClick={() => openSavedAlert(item)}
+                      >
+                        <div className="ds-notif-row__icon" aria-hidden>
+                          <BellIcon size={20} />
+                        </div>
+                        <div className="ds-notif-row__copy">
+                          <strong>{item.title}</strong>
+                          <span>{item.message || "Visitor check-in / update"}</span>
+                        </div>
+                        <span className="ds-notif-row__time">
+                          {formatTime(new Date(item.timestamp)) || "—"}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        ) : null}
+
+        {alerts.length > 0 ? (
+          <section className="ds-notifications-section" aria-label="Recent alerts">
+            <SectionHeader title="Recent System Alerts" />
+            <div className="ds-notifications-card">
+              <ul className="ds-notifications-list" role="list">
+                {alerts.map((item) => {
+                  const isUnread = !item.read;
+                  return (
+                    <li key={item.name}>
+                      <button
+                        type="button"
+                        className={`ds-notif-row${isUnread ? " is-unread" : ""}`}
+                        onClick={() => void openAlert(item)}
+                      >
+                        <div className="ds-notif-row__icon" aria-hidden>
+                          <BellIcon size={20} />
+                        </div>
+                        <div className="ds-notif-row__copy">
+                          <strong>{item.subject || "Visitor update"}</strong>
+                          <span>{item.email_content || item.document_name || "—"}</span>
+                        </div>
+                        <span className="ds-notif-row__time">{formatTime(item.creation) || "—"}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   );

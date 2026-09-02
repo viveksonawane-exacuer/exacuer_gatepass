@@ -126,17 +126,17 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
 
   const modalNode = (
     <div
-      className="vm-gate-pass-modal-root vm-gate-pass-portal-root"
+      className="ds-gatepass-modal-root"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vm-view-gate-pass-title"
     >
-      <button type="button" className="vm-confirm-modal-backdrop vm-no-print" onClick={onClose} aria-label="Close modal" />
+      <button type="button" className="ds-gatepass-modal-backdrop ds-no-print" onClick={onClose} aria-label="Close modal" />
 
-      <div className="vm-view-gate-pass-card-wrap">
+      <div className="ds-gatepass-modal-panel">
         <button
           type="button"
-          className="vm-gate-pass-popup-close vm-no-print"
+          className="ds-gatepass-modal-close ds-no-print"
           onClick={onClose}
           aria-label="Close gate pass"
         >
@@ -144,24 +144,24 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
         </button>
 
         {loading ? (
-          <div className="vm-gatepass-loading-box">
-            <div className="vm-pull-spinner-box is-active-spin">
-              <svg className="vm-pull-svg" viewBox="0 0 24 24" width="28" height="28">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeDasharray="24 32" />
-              </svg>
-            </div>
+          <div className="ds-gatepass-loading">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="9" strokeDasharray="24 32" />
+            </svg>
             <p>Loading digital pass…</p>
           </div>
         ) : null}
 
         {error && !loading ? (
-          <div className="vm-gatepass-error-box">
+          <div className="ds-gatepass-error">
             <p>{error}</p>
-            <button type="button" className="vm-btn-secondary" onClick={onClose}>Close</button>
+            <button type="button" className="ds-btn-secondary" onClick={onClose}>
+              Close
+            </button>
           </div>
         ) : null}
 
-        {!loading && (
+        {!loading && !error && pass ? (
           <VisitorGatePassCard
             passCode={passCode}
             visitorName={visitorName}
@@ -176,8 +176,9 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
             qrPayload={passUrl || `${window.location.origin}/vms/pass/${encodeURIComponent(passCode)}`}
             visitorCount={visitorCount}
             additionalGuests={additionalGuests}
+            hideActions
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

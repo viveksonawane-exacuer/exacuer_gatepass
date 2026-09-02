@@ -11,14 +11,16 @@ import {
 } from "@/api/vms";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { VisitorDetailsForm } from "@/components/checkin/VisitorDetailsForm";
-import { JourneyLangSwitcher } from "@/components/checkin/JourneyLangSwitcher";
 import { CheckInSuccessCard } from "@/components/checkin/CheckInSuccessCard";
 import { MeetingInProgressCard } from "@/components/checkin/MeetingInProgressCard";
 import { CheckoutConfirmationCard } from "@/components/checkin/CheckoutConfirmationCard";
+import { JourneyAwaitingPanel } from "@/components/checkin/JourneyAwaitingPanel";
 import { DiscardEntryModal } from "@/components/checkin/DiscardEntryModal";
 import { ResumeEntryModal } from "@/components/checkin/ResumeEntryModal";
 import { AdditionalGuestsModal } from "@/components/checkin/AdditionalGuestsModal";
 import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
+import { JourneyStepHeader } from "@/components/design-system/JourneyStepHeader";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import {
   type VisitorLang,
   vt,
@@ -48,6 +50,7 @@ import {
 } from "@/lib/additionalGuests";
 
 type JourneyStep =
+  | "welcome"
   | "mobile"
   | "otp"
   | "details"
@@ -85,6 +88,13 @@ type VisitorDoc = {
 };
 
 const OTP_LEN = 6;
+
+const POST_FORM_STEPS = new Set<JourneyStep>(["awaiting", "ready", "pass", "meeting", "checkout"]);
+
+function normalizeResumeStep(step: JourneyStep): JourneyStep {
+  if (step === "mobile" || step === "otp" || step === "welcome") return "details";
+  return step;
+}
 
 function normalizeMobile(raw: string): string {
   return raw.replace(/[\s\-()+]/g, "");
@@ -126,9 +136,10 @@ export function MobileCheckInPage() {
   const { lang, setLang } = useAppLanguage();
   const { user } = useAuth();
   const showCheckout = canPerformCheckout(user);
-  const [step, setStep] = useState<JourneyStep>(() =>
-    boot.resume && boot.draft ? boot.draft.step : "details",
-  );
+  const [step, setStep] = useState<JourneyStep>(() => {
+    if (boot.resume && boot.draft) return normalizeResumeStep(boot.draft.step as JourneyStep);
+    return "details";
+  });
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -211,6 +222,7 @@ export function MobileCheckInPage() {
 
   const goBackInJourney = useCallback(() => {
     switch (step) {
+      case "welcome":
       case "otp":
       case "mobile":
         leaveCheckIn();
@@ -257,8 +269,7 @@ export function MobileCheckInPage() {
     });
   }, [goBackInJourney]);
 
-  const hasEntryProgress =
-    step !== "mobile" ||
+  const hasFormProgress =
     normalizeMobile(form.mobile).length > 0 ||
     Boolean(form.first_name.trim()) ||
     Boolean(form.last_name.trim()) ||
@@ -266,7 +277,11 @@ export function MobileCheckInPage() {
     Boolean(form.visitor_company.trim()) ||
     Boolean(form.visitor_location.trim()) ||
     Boolean(photoFile) ||
-    Boolean(idProofFile) ||
+    Boolean(idProofFile);
+
+  const hasEntryProgress =
+    POST_FORM_STEPS.has(step) ||
+    hasFormProgress ||
     Boolean(visitorName);
 
   const blocker = useBlocker(
@@ -291,7 +306,9 @@ export function MobileCheckInPage() {
 
     const timer = window.setTimeout(() => {
       void (async () => {
-        if (!hasEntryProgress && step === "mobile") {
+        if (step === "welcome") return;
+
+        if (!hasEntryProgress && (step === "mobile" || step === "details")) {
           clearCheckInDraft();
           return;
         }
@@ -305,8 +322,10 @@ export function MobileCheckInPage() {
           /* keep last known data urls */
         }
 
+        const draftStep = step as Exclude<JourneyStep, "welcome">;
+
         saveCheckInDraft({
-          step,
+          step: draftStep,
           form,
           otpVerified,
           additionalGuests,
@@ -833,21 +852,23 @@ function normalizePhotoToVertical(file: File): Promise<File> {
   const checkInLabel = formatTime(visitor?.checked_in_on || visitor?.check_in || submittedAt || undefined);
   const meetingDone = visitor?.status === "Meeting Done";
 
+  const journeyTotal = showCheckout ? 8 : 7;
+
   return (
-    <section className="m-page vj-page">
+    <section className="m-page ds-journey-page">
       {step === "mobile" ? (
-        <form className="vj-screen vm-verify-screen vm-mobile-minimal" onSubmit={(e) => void onContinueMobile(e)} lang={lang}>
-          <div className="vm-login-logo-card">
+        <form className="ds-journey-verify" onSubmit={(e) => void onContinueMobile(e)} lang={lang}>
+          <div className="ds-journey-brand-card">
             <BrandLogo variant="full" className="welcome-wordmark" />
-            <p className="vm-login-subtitle">Visitor Entry & Desk Verification</p>
+            <p className="ds-journey-brand-card__sub">Visitor Entry & Desk Verification</p>
           </div>
 
-          <div className="vj-field vm-verify-field-group">
-            <label className="vm-verify-label">{vt(lang, "mobile_label")}</label>
-            <div className="vj-row vm-verify-row">
-              <div className="vj-input vj-cc vm-verify-cc">+91</div>
+          <div className="ds-journey-field">
+            <label className="ds-journey-field__label">{vt(lang, "mobile_label")}</label>
+            <div className="ds-journey-mobile-row">
+              <div className="ds-journey-mobile-row__cc">+91</div>
               <input
-                className="vj-input vm-verify-input"
+                className="ds-journey-mobile-row__input"
                 required
                 inputMode="tel"
                 autoComplete="tel"
@@ -859,11 +880,11 @@ function normalizePhotoToVertical(file: File): Promise<File> {
             </div>
           </div>
 
-          {error ? <p className="login-error">{error}</p> : null}
+          {error ? <p className="ds-auth-error">{error}</p> : null}
 
           <button
             type="submit"
-            className={`vj-btn vm-verify-btn${form.mobile.length >= 10 ? " is-active" : " is-disabled"}`}
+            className="ds-btn-primary"
             disabled={busy || form.mobile.length < 10}
           >
             {busy ? "Please wait…" : "Continue"}
@@ -872,31 +893,25 @@ function normalizePhotoToVertical(file: File): Promise<File> {
       ) : null}
 
       {step === "otp" ? (
-        <form className="vj-screen vm-verify-screen vm-otp-screen" onSubmit={(e) => void onVerifyOtp(e)} lang={lang}>
-          <header className="vm-page-header vm-checkin-step-header vm-otp-back-row">
-            <button
-              type="button"
-              className="vm-back-btn"
-              onClick={goBackInJourney}
-              aria-label="Back to mobile number"
-            >
-              ‹
-            </button>
-            <div style={{ width: "24px" }} />
-          </header>
+        <form className="ds-journey-verify" onSubmit={(e) => void onVerifyOtp(e)} lang={lang}>
+          <JourneyStepHeader
+            currentStep={2}
+            totalSteps={journeyTotal}
+            stepLabel={`2 · ${vt(lang, "code_title")}`}
+            onBack={goBackInJourney}
+            backLabel="Back to mobile number"
+          />
 
-          <div className="vm-verify-top">
-            <h1 className="vj-h2 vm-code-title">{vt(lang, "code_title")}</h1>
-          </div>
+          <h1 className="ds-journey-otp-title">{vt(lang, "code_title")}</h1>
 
-          <div className="vm-otp-grid-row" onPaste={(e) => onOtpPaste(e.clipboardData.getData("text"))}>
+          <div className="ds-journey-otp-grid" onPaste={(e) => onOtpPaste(e.clipboardData.getData("text"))}>
             {otpDigits.slice(0, 3).map((d, i) => (
               <input
                 key={i}
                 ref={(el) => {
                   otpRefs.current[i] = el;
                 }}
-                className={`vm-otp-box-dark${d ? " is-filled" : ""}${
+                className={`ds-journey-otp-box${d ? " is-filled" : ""}${
                   otpDigits.findIndex((digit) => !digit) === i ? " is-focused" : ""
                 }`}
                 inputMode="numeric"
@@ -908,7 +923,7 @@ function normalizePhotoToVertical(file: File): Promise<File> {
                 onKeyDown={(e) => onOtpKeyDown(i, e.key)}
               />
             ))}
-            <span className="vm-otp-dash">—</span>
+            <span className="ds-journey-otp-dash">—</span>
             {otpDigits.slice(3, 6).map((d, i) => {
               const idx = i + 3;
               return (
@@ -917,7 +932,7 @@ function normalizePhotoToVertical(file: File): Promise<File> {
                   ref={(el) => {
                     otpRefs.current[idx] = el;
                   }}
-                  className={`vm-otp-box-dark${d ? " is-filled" : ""}${
+                  className={`ds-journey-otp-box${d ? " is-filled" : ""}${
                     otpDigits.findIndex((digit) => !digit) === idx ? " is-focused" : ""
                   }`}
                   inputMode="numeric"
@@ -932,31 +947,30 @@ function normalizePhotoToVertical(file: File): Promise<File> {
             })}
           </div>
 
-          <p className="vm-resend-timer-text">
+          <p className="ds-journey-resend">
             {resendIn > 0 ? (
               <>
                 {vt(lang, "resend_in")} <strong>{`00:${String(resendIn).padStart(2, "0")}`}</strong>
               </>
             ) : (
-              <button type="button" className="vj-link" onClick={() => void onResendOtp()}>
+              <button type="button" onClick={() => void onResendOtp()}>
                 {vt(lang, "resend_code")}
               </button>
             )}
           </p>
 
-
           {otpSuccess ? (
-            <div className="vm-otp-success-badge" role="status">
-              <span className="vm-otp-success-check">✓</span>
+            <div className="ds-journey-otp-success" role="status">
+              <span aria-hidden>✓</span>
               <span>OTP verified successfully! Opening form...</span>
             </div>
           ) : null}
 
-          {error ? <p className="login-error">{error}</p> : null}
+          {error ? <p className="ds-auth-error">{error}</p> : null}
 
           <button
             type="submit"
-            className={`vj-btn vm-verify-submit-btn${otpDigits.join("").length === OTP_LEN ? " is-active" : " is-disabled"}`}
+            className="ds-btn-primary"
             disabled={busy || otpDigits.join("").length !== OTP_LEN || otpSuccess}
           >
             {busy ? vt(lang, "verifying") : otpSuccess ? "Verified ✓" : vt(lang, "verify")}
@@ -965,8 +979,8 @@ function normalizePhotoToVertical(file: File): Promise<File> {
       ) : null}
 
       {step === "details" ? (
-        <div className="vm-home-page" lang={lang}>
-          <main className="vm-main-body vm-form-surface">
+        <div lang={lang}>
+          <main className="vm-form-surface">
             <VisitorDetailsForm
               lang={lang}
               values={{
@@ -1009,239 +1023,135 @@ function normalizePhotoToVertical(file: File): Promise<File> {
       ) : null}
 
       {step === "awaiting" ? (
-        <div className="vj-screen" lang={lang}>
-          <div className="vj-topbar">
-            <BrandLogo variant="mark" className="vj-brand-logo" />
-            <div className="vj-brandtxt">
-              {vt(lang, "request_status")}
-              <span>{vt(lang, "live")}</span>
-            </div>
-            <JourneyLangSwitcher
-              lang={lang}
-              compact
-              onChange={(next) => setLang(next)}
-            />
-          </div>
-          <span className="vj-tag vj-tag-warn">⏳ {vt(lang, "awaiting_gate")}</span>
-          <div className="vj-tl">
-            <TlItem done title={vt(lang, "details_submitted")} sub={formatTime(submittedAt || undefined)} />
-            <TlItem done title={vt(lang, "host_notified")} sub={hostName} />
-            <TlItem active title={vt(lang, "awaiting_checkin")} sub={vt(lang, "proceed_gate_desk")} />
-            <TlItem title={vt(lang, "inside")} sub={vt(lang, "pending")} muted />
-          </div>
-          <p className="vj-p vj-grow">{vt(lang, "security_will_checkin")}</p>
-          {error ? <p className="login-error">{error}</p> : null}
-          <button type="button" className="vj-btn" disabled={busy} onClick={() => void onProceedToGate()}>
-            {busy ? vt(lang, "checking_in") : vt(lang, "proceed_to_gate")}
-          </button>
-        </div>
+        <JourneyAwaitingPanel
+          lang={lang}
+          hostName={hostName}
+          submittedAt={submittedAt}
+          busy={busy}
+          error={error}
+          onProceed={() => void onProceedToGate()}
+          onLangChange={(next) => setLang(next)}
+        />
       ) : null}
 
       {step === "ready" ? (
-        <div className="vm-home-page">
-          {/* Header */}
-          <header className="vm-page-header vm-checkin-step-header">
-            <button type="button" className="vm-back-btn" onClick={() => setStep("details")} aria-label="Back">
-              ‹
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "#DCFCE7", padding: "0.35rem 0.85rem", borderRadius: "20px" }}>
-              <span style={{ color: "#16A34A", fontWeight: 800, fontSize: "0.85rem" }}>✓ 5 {vt(lang, "check_in_step")}</span>
-            </div>
-            <div style={{ width: "24px" }} />
-          </header>
-
-          {/* Progress Step Line (5 steps filled) */}
-          <div style={{ display: "flex", gap: "0.35rem", margin: "0.75rem 0.25rem 1.25rem" }}>
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#E2E8F0", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#E2E8F0", borderRadius: "2px" }} />
-          </div>
-
-          <main className="vm-main-body vm-form-surface">
-            <CheckInSuccessCard
-              hostName={hostName}
-              department="Production Dept."
-              checkInTime="23 Jul 2026, 09:15 AM"
-              duration="06:15 Hrs"
-              busy={busy}
-              onGeneratePass={() => void onShowPass()}
-            />
-            {error ? <p className="login-error" style={{ textAlign: "center", marginTop: "0.5rem" }}>{error}</p> : null}
-          </main>
+        <div className="ds-journey-step-page">
+          <JourneyStepHeader
+            currentStep={5}
+            totalSteps={journeyTotal}
+            stepLabel={`5 · ${vt(lang, "check_in_step")}`}
+            tone="success"
+            onBack={() => setStep("details")}
+          />
+          <CheckInSuccessCard
+            hostName={hostName}
+            department="Production Dept."
+            checkInTime="23 Jul 2026, 09:15 AM"
+            duration="06:15 Hrs"
+            busy={busy}
+            onGeneratePass={() => void onShowPass()}
+          />
+          {error ? <p className="ds-auth-error">{error}</p> : null}
         </div>
       ) : null}
 
       {step === "pass" ? (
-        <div className="vm-home-page">
-          {/* Header */}
-          <header className="vm-page-header vm-checkin-step-header">
-            <button type="button" className="vm-back-btn" onClick={() => setStep("ready")} aria-label="Back">
-              ‹
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "#EFF6FF", padding: "0.35rem 0.85rem", borderRadius: "20px" }}>
-              <span style={{ color: "#2563EB", fontWeight: 800, fontSize: "0.85rem" }}>💳 6 {vt(lang, "gate_pass_step")}</span>
-            </div>
-            <div style={{ width: "24px" }} />
-          </header>
-
-          {/* Progress Step Line (6 steps filled) */}
-          <div style={{ display: "flex", gap: "0.35rem", margin: "0.75rem 0.25rem 1.25rem" }}>
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#E2E8F0", borderRadius: "2px" }} />
-          </div>
-
-          <main className="vm-main-body">
-            <VisitorGatePassCard
-              passCode={visitorName ? `GP-${visitorName}` : "GP-—"}
-              visitorName={displayName}
-              company={company}
-              visitorCompany={visitorCompany}
-              hostName={hostName}
-              department={visitor?.floor || "—"}
-              floor={visitor?.floor || "—"}
-              status={visitor?.status || "Approved"}
-              validUntil={visitor?.qr_expires_on ? formatTime(visitor.qr_expires_on) : vt(lang, "end_of_day")}
-              checkInTime={checkInLabel}
-              checkInLocation={vt(lang, "main_gate")}
-              photoUrl={photoUrl}
-              qrPayload={passUrl || (visitorName ? `${window.location.origin}/vms/pass/${encodeURIComponent(visitorName)}` : undefined)}
-              visitorCount={Number(form.number_of_visitors) || 1}
-              additionalGuests={additionalGuests}
-              busy={busy}
-              onDownload={() => {
-                if (passUrl) {
-                  window.open(passUrl, "_blank");
-                } else {
-                  window.print();
-                }
-              }}
-              onExit={() => leaveTo("/")}
-            />
-            <button
-              type="button"
-              className="vm-btn-outline"
-              style={{ width: "100%", marginTop: "0.65rem", height: 48, borderRadius: 14 }}
-              onClick={() => void onEnterMeeting()}
-            >
-              {vt(lang, "continue_meeting")}
-            </button>
-            {error ? <p className="login-error" style={{ textAlign: "center", marginTop: "0.5rem" }}>{error}</p> : null}
-          </main>
+        <div className="ds-journey-step-page">
+          <JourneyStepHeader
+            currentStep={6}
+            totalSteps={journeyTotal}
+            stepLabel={`6 · ${vt(lang, "gate_pass_step")}`}
+            tone="info"
+            onBack={() => setStep("ready")}
+          />
+          <VisitorGatePassCard
+            passCode={visitorName ? `GP-${visitorName}` : "GP-—"}
+            visitorName={displayName}
+            company={company}
+            visitorCompany={visitorCompany}
+            hostName={hostName}
+            department={visitor?.floor || "—"}
+            floor={visitor?.floor || "—"}
+            status={visitor?.status || "Approved"}
+            validUntil={visitor?.qr_expires_on ? formatTime(visitor.qr_expires_on) : vt(lang, "end_of_day")}
+            checkInTime={checkInLabel}
+            checkInLocation={vt(lang, "main_gate")}
+            photoUrl={photoUrl}
+            qrPayload={passUrl || (visitorName ? `${window.location.origin}/vms/pass/${encodeURIComponent(visitorName)}` : undefined)}
+            visitorCount={Number(form.number_of_visitors) || 1}
+            additionalGuests={additionalGuests}
+            busy={busy}
+            onDownload={() => {
+              if (passUrl) {
+                window.open(passUrl, "_blank");
+              } else {
+                window.print();
+              }
+            }}
+            onExit={() => leaveTo("/")}
+          />
+          <button type="button" className="ds-btn-secondary" onClick={() => void onEnterMeeting()}>
+            {vt(lang, "continue_meeting")}
+          </button>
+          {error ? <p className="ds-auth-error">{error}</p> : null}
         </div>
       ) : null}
 
       {step === "meeting" ? (
-        <div className="vm-home-page">
-          {/* Header */}
-          <header className="vm-page-header vm-checkin-step-header">
-            <button type="button" className="vm-back-btn" onClick={() => setStep("pass")} aria-label="Back">
-              ‹
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "#DCFCE7", padding: "0.35rem 0.85rem", borderRadius: "20px" }}>
-              <span style={{ color: "#16A34A", fontWeight: 800, fontSize: "0.85rem" }}>👥 7 Meeting</span>
-            </div>
-            <div style={{ width: "24px" }} />
-          </header>
-
-          {/* Progress Step Line (7 steps filled) */}
-          <div style={{ display: "flex", gap: "0.35rem", margin: "0.75rem 0.25rem 1.25rem" }}>
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-          </div>
-
-          <main className="vm-main-body vm-form-surface">
-            {meetingDone && !showCheckout ? (
-              <div style={{ textAlign: "center", padding: "1rem 0" }}>
-                <div
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    borderRadius: "50%",
-                    background: "#DCFCE7",
-                    margin: "0.5rem auto 1rem",
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: "2.2rem",
-                    color: "#16A34A",
-                  }}
-                >
-                  ✓
-                </div>
-                <h1 className="vm-page-title" style={{ fontSize: "1.35rem", textAlign: "center", color: "#0F172A" }}>
-                  Meeting Complete
-                </h1>
-                <p style={{ textAlign: "center", color: "#64748B", fontSize: "0.9rem", margin: "0.5rem 0 0" }}>
-                  Security has been notified. Please proceed to the security desk for check-out.
-                </p>
-              </div>
-            ) : (
-              <MeetingInProgressCard
-                hostName={hostName}
-                department="Production Dept."
-                checkInTime="23 Jul 2026, 09:15 AM"
-                expectedCheckout="05:30 PM"
-                expectedDuration="08:15 Hrs"
-                busy={busy}
-                onFinishMeeting={() => void onFinishMeeting()}
-              />
-            )}
-            {error ? <p className="login-error" style={{ textAlign: "center", marginTop: "0.5rem" }}>{error}</p> : null}
-          </main>
-        </div>
-      ) : null}
-
-      {step === "checkout" && showCheckout ? (
-        <div className="vm-home-page">
-          {/* Header */}
-          <header className="vm-page-header vm-checkin-step-header">
-            <button type="button" className="vm-back-btn" onClick={() => setStep("meeting")} aria-label="Back">
-              ‹
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "#FFEDD5", padding: "0.35rem 0.85rem", borderRadius: "20px" }}>
-              <span style={{ color: "#EA580C", fontWeight: 800, fontSize: "0.85rem" }}>🚪 8 Check-out</span>
-            </div>
-            <div style={{ width: "24px" }} />
-          </header>
-
-          {/* Progress Step Line (8 steps filled) */}
-          <div style={{ display: "flex", gap: "0.35rem", margin: "0.75rem 0.25rem 1.25rem" }}>
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-            <div style={{ flex: 1, height: "4px", background: "#2563EB", borderRadius: "2px" }} />
-          </div>
-
-          <main className="vm-main-body vm-form-surface">
-            <CheckoutConfirmationCard
+        <div className="ds-journey-step-page">
+          <JourneyStepHeader
+            currentStep={7}
+            totalSteps={journeyTotal}
+            stepLabel="7 · Meeting"
+            tone="success"
+            onBack={() => setStep("pass")}
+          />
+          {meetingDone && !showCheckout ? (
+            <EmptyState
+              icon={
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              }
+              title="Meeting Complete"
+              description="Security has been notified. Please proceed to the security desk for check-out."
+            />
+          ) : (
+            <MeetingInProgressCard
               hostName={hostName}
               department="Production Dept."
               checkInTime="23 Jul 2026, 09:15 AM"
               expectedCheckout="05:30 PM"
               expectedDuration="08:15 Hrs"
               busy={busy}
-              onConfirmCheckout={() => void onCompleteCheckout()}
-              onCancel={() => setStep("meeting")}
+              onFinishMeeting={() => void onFinishMeeting()}
             />
-            {error ? <p className="login-error" style={{ textAlign: "center", marginTop: "0.5rem" }}>{error}</p> : null}
-          </main>
+          )}
+          {error ? <p className="ds-auth-error">{error}</p> : null}
+        </div>
+      ) : null}
+
+      {step === "checkout" && showCheckout ? (
+        <div className="ds-journey-step-page">
+          <JourneyStepHeader
+            currentStep={8}
+            totalSteps={journeyTotal}
+            stepLabel="8 · Check-out"
+            tone="warning"
+            onBack={() => setStep("meeting")}
+          />
+          <CheckoutConfirmationCard
+            hostName={hostName}
+            department="Production Dept."
+            checkInTime="23 Jul 2026, 09:15 AM"
+            expectedCheckout="05:30 PM"
+            expectedDuration="08:15 Hrs"
+            busy={busy}
+            onConfirmCheckout={() => void onCompleteCheckout()}
+            onCancel={() => setStep("meeting")}
+          />
+          {error ? <p className="ds-auth-error">{error}</p> : null}
         </div>
       ) : null}
 
@@ -1278,32 +1188,5 @@ function normalizePhotoToVertical(file: File): Promise<File> {
         }}
       />
     </section>
-  );
-}
-
-function TlItem({
-  title,
-  sub,
-  done,
-  active,
-  muted,
-}: {
-  title: string;
-  sub: string;
-  done?: boolean;
-  active?: boolean;
-  muted?: boolean;
-}) {
-  return (
-    <div className={`vj-tl-item${muted ? " muted" : ""}`}>
-      <div className="vj-tl-rail">
-        <div className={`vj-tl-dot${done ? " done" : ""}${active ? " active" : ""}`} />
-        <div className="vj-tl-line" />
-      </div>
-      <div className="vj-tl-text">
-        <b>{title}</b>
-        {sub}
-      </div>
-    </div>
   );
 }

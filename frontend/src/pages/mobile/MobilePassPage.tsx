@@ -6,6 +6,7 @@ import { formatTime } from "@/lib/format";
 import { resolveMode } from "@/lib/roles";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 export function MobilePassPage() {
@@ -49,38 +50,38 @@ export function MobilePassPage() {
   const featured = rows[0];
 
   return (
-    <div className="vm-home-page">
+    <div className="ds-gatepass-page">
+      {loading ? <EmptyState title="Loading pass…" /> : null}
+      {error ? <p className="ds-auth-error">{error}</p> : null}
 
-      <main className="vm-main-body" style={{ marginTop: "0.5rem" }}>
-        {loading ? <p className="vm-empty-hint">Loading pass…</p> : null}
-        {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
+      {!loading && !featured ? (
+        <EmptyState
+          title="No gate pass found"
+          description="No gate pass found for this account."
+        />
+      ) : null}
 
-        {!loading && !featured ? (
-          <p className="vm-empty-hint">No gate pass found for this account</p>
-        ) : null}
-
-        {featured ? (
-          <VisitorGatePassCard
-            passCode={featured.name}
-            visitorName={featured.full_name || "Visitor"}
-            company={featured.company || "—"}
-            visitorCompany={featured.visitor_company || "—"}
-            hostName={featured.person_to_meet_name || featured.host_name || "—"}
-            floor={featured.floor || "—"}
-            status={featured.status || "Approved"}
-            validUntil={featured.qr_expires_on ? formatTime(featured.qr_expires_on) : "—"}
-            checkInTime="—"
-            checkInLocation="Main Gate"
-            photoUrl={undefined}
-            qrPayload={featured.pass_url || undefined}
-            onDownload={() => {
-              if (featured.pass_url) window.open(featured.pass_url, "_blank");
-              else window.print();
-            }}
-            onExit={() => navigate("/", { replace: true })}
-          />
-        ) : null}
-      </main>
+      {featured ? (
+        <VisitorGatePassCard
+          passCode={featured.name}
+          visitorName={featured.full_name || "Visitor"}
+          company={featured.company || "—"}
+          visitorCompany={featured.visitor_company || "—"}
+          hostName={featured.person_to_meet_name || featured.host_name || "—"}
+          floor={featured.floor || "—"}
+          status={featured.status || "Approved"}
+          validUntil={featured.qr_expires_on ? formatTime(featured.qr_expires_on) : "—"}
+          checkInTime="—"
+          checkInLocation="Main Gate"
+          photoUrl={undefined}
+          qrPayload={featured.pass_url || undefined}
+          onDownload={() => {
+            if (featured.pass_url) window.open(featured.pass_url, "_blank");
+            else window.print();
+          }}
+          onExit={() => navigate("/", { replace: true })}
+        />
+      ) : null}
     </div>
   );
 }

@@ -28,32 +28,28 @@ export function PhotoPreviewModal({ src, alt = "Photo preview", onClose }: Photo
   if (!src) return null;
 
   return createPortal(
-    <div className="vm-confirm-modal-root" role="dialog" aria-modal="true" aria-label="Photo preview">
+    <div className="ds-gatepass-modal-root" role="dialog" aria-modal="true" aria-label="Photo preview">
       <button
         type="button"
-        className="vm-confirm-modal-backdrop"
+        className="ds-gatepass-modal-backdrop"
         onClick={onClose}
         aria-label="Close photo preview"
       />
-      <div
-        className={`vm-confirm-modal-card vm-photo-preview-modal${isLandscape ? " is-landscape" : ""}`}
-      >
-        <button type="button" className="vm-confirm-modal-close" onClick={onClose} aria-label="Close">
+      <div className={`ds-gatepass-modal-panel${isLandscape ? " is-landscape" : ""}`}>
+        <button type="button" className="ds-gatepass-modal-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
-        <div className="vm-photo-preview-frame">
-          <div className="vm-photo-preview-viewport">
-            <img
-              src={src}
-              alt={alt}
-              className="vm-photo-preview-modal-img"
-              decoding="async"
-              onLoad={(event) => {
-                const img = event.currentTarget;
-                setIsLandscape(img.naturalWidth > img.naturalHeight * 1.1);
-              }}
-            />
-          </div>
+        <div className="ds-photo-preview-frame">
+          <img
+            src={src}
+            alt={alt}
+            className="ds-photo-preview-img"
+            decoding="async"
+            onLoad={(event) => {
+              const img = event.currentTarget;
+              setIsLandscape(img.naturalWidth > img.naturalHeight * 1.1);
+            }}
+          />
         </div>
       </div>
     </div>,

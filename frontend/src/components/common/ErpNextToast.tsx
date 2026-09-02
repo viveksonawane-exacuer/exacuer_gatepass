@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { formatNowTime } from "@/lib/format";
@@ -24,7 +24,15 @@ export function ErpNextToast({ toast, onClose }: Props) {
   const touchStartY = useRef<number | null>(null);
   const autoCloseTimer = useRef<number | null>(null);
 
-  // Auto-save to notification history whenever a toast appears
+  const handleDismiss = useCallback(() => {
+    setIsSwipingOut(true);
+    setTimeout(() => {
+      onClose();
+      setIsSwipingOut(false);
+      setDragY(0);
+    }, 240);
+  }, [onClose]);
+
   useEffect(() => {
     if (!toast) {
       setDragY(0);
@@ -49,16 +57,7 @@ export function ErpNextToast({ toast, onClose }: Props) {
     return () => {
       if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
     };
-  }, [toast]);
-
-  const handleDismiss = () => {
-    setIsSwipingOut(true);
-    setTimeout(() => {
-      onClose();
-      setIsSwipingOut(false);
-      setDragY(0);
-    }, 240);
-  };
+  }, [toast, handleDismiss]);
 
   const handleTouchStart = (e: TouchEvent) => {
     if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
@@ -69,7 +68,6 @@ export function ErpNextToast({ toast, onClose }: Props) {
     if (touchStartY.current === null) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStartY.current;
-    // Allow dragging upwards (negative diff) and slight resistance downwards
     if (diff < 0) {
       setDragY(diff);
     } else {
@@ -80,10 +78,8 @@ export function ErpNextToast({ toast, onClose }: Props) {
   const handleTouchEnd = () => {
     if (touchStartY.current === null) return;
     if (dragY < -25) {
-      // Swiped up sufficiently -> dismiss upwards
       handleDismiss();
     } else {
-      // Snap back
       setDragY(0);
     }
     touchStartY.current = null;
@@ -103,9 +99,9 @@ export function ErpNextToast({ toast, onClose }: Props) {
   };
 
   return createPortal(
-    <div className={`vm-toast-overlay${isSwipingOut ? " is-swiping-out" : ""}`} role="status" aria-live="polite">
+    <div className="ds-toast-overlay" role="status" aria-live="polite">
       <div
-        className="vm-toast-glass"
+        className="ds-toast"
         style={cardStyle}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -115,23 +111,18 @@ export function ErpNextToast({ toast, onClose }: Props) {
         tabIndex={0}
         aria-label={`${toast.title}. ${toast.message}. Swipe up to dismiss.`}
       >
-        <span className="vm-toast-glass-shine" aria-hidden />
+        <span className="ds-toast__handle" aria-hidden />
 
-        {/* Subtle Top Swipe Handle Bar */}
-        <span className="vm-toast-swipe-handle" aria-hidden />
+        <div className="ds-toast__row">
+          <BrandLogo variant="icon" className="ds-toast__icon" />
 
-        <div className="vm-toast-content-row">
-          <span className="vm-toast-app-icon" aria-hidden>
-            <BrandLogo variant="icon" className="vm-toast-app-icon-img" />
-          </span>
-
-          <span className="vm-toast-copy">
-            <span className="vm-toast-copy-head">
-              <span className="vm-toast-app-name">Exacuer Global</span>
-              <span className="vm-toast-time">{timeLabel}</span>
+          <span className="ds-toast__copy">
+            <span className="ds-toast__head">
+              <span className="ds-toast__app">Exacuer Global</span>
+              <span className="ds-toast__time">{timeLabel}</span>
             </span>
-            <strong className="vm-toast-title">{toast.title}</strong>
-            <span className="vm-toast-message">{toast.message}</span>
+            <strong className="ds-toast__title">{toast.title}</strong>
+            <span className="ds-toast__message">{toast.message}</span>
           </span>
         </div>
       </div>

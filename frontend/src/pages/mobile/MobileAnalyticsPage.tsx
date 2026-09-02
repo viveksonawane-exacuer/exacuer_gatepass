@@ -19,6 +19,7 @@ import { usePageChrome } from "@/context/PageChromeContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
 import { ut } from "@/i18n/uiChrome";
 import { getCurrentStageTimestamp } from "@/lib/visitStages";
+import { MetricCard } from "@/components/design-system/MetricCard";
 
 type SubTab = "overview" | "timeline" | "checkout_pending";
 type Granularity = "daily" | "weekly" | "monthly";
@@ -340,16 +341,15 @@ export function MobileAnalyticsPage() {
   }, [setReportsTab]);
 
   return (
-    <div className="vm-home-page vm-analytics-page vm-ios-theme">
-      {/* Top Granularity Segmented Control Bar */}
-      <div className="vm-segmented-pills-bar" role="tablist" aria-label="Time granularity">
+    <div className="ds-analytics-page ds-stagger">
+      <div className="ds-segmented" role="tablist" aria-label="Time granularity">
         {(["daily", "weekly", "monthly"] as const).map((g) => (
           <button
             key={g}
             type="button"
             role="tab"
             aria-selected={granularity === g}
-            className={`vm-segmented-pill-btn${granularity === g ? " is-active" : ""}`}
+            className={`ds-segmented__tab${granularity === g ? " is-active" : ""}`}
             onClick={() => {
               setGranularity(g);
               setSelectedBarLabel(null);
@@ -361,7 +361,7 @@ export function MobileAnalyticsPage() {
       </div>
 
       {error ? (
-        <div className="vm-analytics-error" role="alert">
+        <div className="ds-analytics-error" role="alert">
           <span>{error}</span>
           <button type="button" onClick={() => void load(selectedDate)}>
             Retry
@@ -369,24 +369,23 @@ export function MobileAnalyticsPage() {
         </div>
       ) : null}
 
-      {/* Total Visitors Bar Chart Card (Interactive) */}
-      <div className="vm-overview-card vm-analytics-chart-card">
-        <div className="vm-analytics-chart-head">
+      <div className="ds-card ds-analytics-chart-card">
+        <div className="ds-analytics-chart-head">
           <div>
-            <span className="vm-analytics-eyebrow">
+            <span className="ds-analytics-eyebrow">
               {granularity === "daily"
                 ? "Today's Visitors"
                 : granularity === "weekly"
                   ? "This Week's Visitors"
                   : "This Month's Visitors"}
             </span>
-            <div className="vm-analytics-big-number">
+            <div className="ds-analytics-big-number">
               {loading ? "—" : formatCount(analyticsData.totalCount, lang)}
             </div>
           </div>
           <button
             type="button"
-            className="vm-chart-more-btn"
+            className="ds-chart-refresh-btn"
             aria-label="Refresh data"
             onClick={() => void load(selectedDate)}
           >
@@ -397,36 +396,36 @@ export function MobileAnalyticsPage() {
         </div>
 
         {/* Visual Bar Chart */}
-        <div className="vm-barchart-container">
-          <div className="vm-barchart-axis-left">
+        <div className="ds-barchart-container">
+          <div className="ds-barchart-axis-left">
             <span>High</span>
             <span>Mid</span>
             <span>Low</span>
             <span>0</span>
           </div>
 
-          <div className="vm-barchart-bars">
+          <div className="ds-barchart-bars">
             {analyticsData.bars.map((bar) => (
               <div
                 key={bar.label}
-                className={`vm-barchart-col${bar.active ? " is-active" : ""}`}
+                className={`ds-barchart-col${bar.active ? " is-active" : ""}`}
                 role="button"
                 tabIndex={0}
                 aria-label={`${bar.label}: ${bar.count} visitors. Tap to select.`}
                 onClick={() => setSelectedBarLabel((prev) => (prev === bar.label ? null : bar.label))}
               >
                 {bar.active && (
-                  <div className="vm-barchart-active-tooltip">
+                  <div className="ds-barchart-active-tooltip">
                     <strong>{bar.tooltipText}</strong>
                   </div>
                 )}
-                <div className="vm-barchart-bar-track">
+                <div className="ds-barchart-bar-track">
                   <div
-                    className={`vm-barchart-bar-fill${bar.active ? " is-active" : ""}`}
+                    className={`ds-barchart-bar-fill${bar.active ? " is-active" : ""}`}
                     style={{ height: bar.height }}
                   />
                 </div>
-                <span className="vm-barchart-label">{bar.label}</span>
+                <span className="ds-barchart-label">{bar.label}</span>
               </div>
             ))}
           </div>
@@ -434,13 +433,13 @@ export function MobileAnalyticsPage() {
 
         {/* Selected Bar Details Pill */}
         {selectedBarLabel ? (
-          <div className="vm-barchart-drilldown-row">
-            <span className="vm-drilldown-info">
+          <div className="ds-barchart-drilldown-row">
+            <span>
               Filtered: <strong>{selectedBarLabel}</strong> ({analyticsData.bars.find((b) => b.label === selectedBarLabel)?.count ?? 0} visitors)
             </span>
             <button
               type="button"
-              className="vm-drilldown-btn"
+              className="ds-drilldown-btn"
               onClick={handleScrollToTimeline}
             >
               View in Timeline ›
@@ -449,116 +448,92 @@ export function MobileAnalyticsPage() {
         ) : null}
 
         {/* 2-Column Clickable Metric Cards */}
-        <div className="vm-metric-duo-grid">
-          <div
-            className="vm-metric-duo-card is-clickable"
-            role="button"
-            tabIndex={0}
+        <div className="ds-analytics-metric-duo">
+          <MetricCard
+            value={formatCount(analyticsData.directCount, lang)}
+            label="Direct Check-in"
+            meta="View Live Passes ›"
+            tone="blue"
+            loading={loading}
             onClick={() => navigate("/inside")}
-            title="View Live Gate Passes"
-          >
-            <div className="vm-metric-duo-icon is-blue">
+            aria-label="View live gate passes"
+            icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="8.5" cy="7" r="4" />
                 <line x1="20" y1="8" x2="20" y2="14" />
                 <line x1="23" y1="11" x2="17" y2="11" />
               </svg>
-            </div>
-            <strong className="vm-metric-duo-value">
-              {loading ? "—" : formatCount(analyticsData.directCount, lang)}
-            </strong>
-            <span className="vm-metric-duo-label">Direct Check-in</span>
-            <span className="vm-metric-duo-gain">View Live Passes ›</span>
-          </div>
-
-          <div
-            className="vm-metric-duo-card is-clickable"
-            role="button"
-            tabIndex={0}
+            }
+          />
+          <MetricCard
+            value={formatCount(analyticsData.preRegisteredCount, lang)}
+            label="Pre-registered"
+            meta="View Host Invites ›"
+            tone="indigo"
+            loading={loading}
             onClick={() => navigate("/approvals")}
-            title="View Host Invites & Approvals"
-          >
-            <div className="vm-metric-duo-icon is-purple">
+            aria-label="View host invites and approvals"
+            icon={
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-            </div>
-            <strong className="vm-metric-duo-value">
-              {loading ? "—" : formatCount(analyticsData.preRegisteredCount, lang)}
-            </strong>
-            <span className="vm-metric-duo-label">Pre-registered</span>
-            <span className="vm-metric-duo-gain">View Host Invites ›</span>
-          </div>
+            }
+          />
         </div>
       </div>
 
-      {/* Date Navigation & Sub-Tabs */}
-      <div className="vm-reports-subtabs" role="tablist" aria-label="Report sub tabs">
+      <div className="ds-segmented" role="tablist" aria-label="Report sub tabs">
         <button
           type="button"
           role="tab"
           aria-selected={subTab === "overview"}
-          className={`vm-reports-tab-btn${subTab === "overview" ? " is-active" : ""}`}
+          className={`ds-segmented__tab${subTab === "overview" ? " is-active" : ""}`}
           onClick={() => setReportsTab("overview")}
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          <span>Analytics</span>
+          Analytics
         </button>
 
         <button
           type="button"
           role="tab"
           aria-selected={subTab === "timeline"}
-          className={`vm-reports-tab-btn${subTab === "timeline" ? " is-active" : ""}`}
+          className={`ds-segmented__tab${subTab === "timeline" ? " is-active" : ""}`}
           onClick={() => setReportsTab("timeline")}
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span>Timeline Flow</span>
+          Timeline
         </button>
 
         <button
           type="button"
           role="tab"
           aria-selected={subTab === "checkout_pending"}
-          className={`vm-reports-tab-btn${subTab === "checkout_pending" ? " is-active" : ""}`}
+          className={`ds-segmented__tab${subTab === "checkout_pending" ? " is-active" : ""}`}
           onClick={() => setReportsTab("checkout_pending")}
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-          </svg>
-          <span>Checkout</span>
+          Checkout
           {checkoutPendingCount > 0 ? (
-            <span className="vm-tab-badge is-warn">{checkoutPendingCount}</span>
+            <span className="ds-segmented__count is-warn">{checkoutPendingCount}</span>
           ) : null}
         </button>
       </div>
 
-      {/* Modern Date Stepper Bar */}
-      <div className="vm-date-stepper-bar">
+      <div className="ds-date-stepper">
         <button
           type="button"
-          className="vm-date-stepper-btn"
+          className="ds-date-stepper__btn"
           onClick={() => shiftDate(-1)}
           aria-label="Previous day"
         >
           ‹
         </button>
 
-        <label className="vm-date-stepper-label" title="Click to change date">
+        <label className="ds-date-stepper__label" title="Click to change date">
           <strong>{isToday ? "Today" : dateLabel}</strong>
-          <span className="vm-date-subtext">
+          <span className="ds-date-stepper__sub">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
@@ -569,7 +544,7 @@ export function MobileAnalyticsPage() {
           </span>
           <input
             type="date"
-            className="vm-hidden-date-input"
+            className="ds-hidden-date-input"
             value={selectedDate}
             max={toInputDate(new Date())}
             onChange={(e) => setSelectedDate(e.target.value || toInputDate(new Date()))}
@@ -579,7 +554,7 @@ export function MobileAnalyticsPage() {
 
         <button
           type="button"
-          className="vm-date-stepper-btn"
+          className="ds-date-stepper__btn"
           disabled={isToday}
           onClick={() => shiftDate(1)}
           aria-label="Next day"
@@ -588,11 +563,9 @@ export function MobileAnalyticsPage() {
         </button>
       </div>
 
-      {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
-
-      <main className="vm-reports-body">
+      <main className="ds-reports-body">
         {subTab === "overview" ? (
-          <div className="vm-overview-card vm-analytics-card">
+          <div className="ds-card ds-reports-panel">
             <StageCountsReport
               kpis={kpis}
               rows={rows}
@@ -605,10 +578,10 @@ export function MobileAnalyticsPage() {
         ) : null}
 
         {subTab === "timeline" ? (
-          <div className="vm-overview-card vm-timeline-wrapper-card" id="vm-timeline-section">
-            <div className="vm-timeline-header-block">
-              <h3 className="vm-timeline-section-title">Visitor Activity Flow</h3>
-              <p className="vm-timeline-section-sub">Chronological timeline of check-ins & visits</p>
+          <div className="ds-card ds-reports-panel" id="vm-timeline-section">
+            <div className="ds-reports-panel__head">
+              <h3 className="ds-stage-report-title">Visitor Activity Flow</h3>
+              <p className="ds-reports-panel__sub">Chronological timeline of check-ins & visits</p>
             </div>
             <VisitorTimelineReport
               rows={rows}
@@ -619,7 +592,7 @@ export function MobileAnalyticsPage() {
         ) : null}
 
         {subTab === "checkout_pending" ? (
-          <div className="vm-overview-card vm-analytics-card">
+          <div className="ds-card ds-reports-panel">
             <CheckoutPendingReport
               rows={rows}
               loading={loading}

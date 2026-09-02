@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { passApi, type PublicPassResult } from "@/api/vms";
 import { formatTime } from "@/lib/format";
 import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
+import { EmptyState } from "@/components/design-system/EmptyState";
 
 export function PublicPassPage() {
   const { token = "" } = useParams();
@@ -34,7 +35,7 @@ export function PublicPassPage() {
   if (loading) {
     return (
       <div className="pass-public">
-        <div className="vm-empty-hint" style={{ color: "#64748b" }}>Loading gate pass…</div>
+        <EmptyState title="Loading gate pass…" />
       </div>
     );
   }
@@ -42,9 +43,9 @@ export function PublicPassPage() {
   if (error || !result) {
     return (
       <div className="pass-public">
-        <div className="vm-overview-card" style={{ maxWidth: 420, textAlign: "center", background: "#ffffff", padding: "1.5rem" }}>
-          <p className="login-error">{error || "Pass not found"}</p>
-          <button type="button" className="vm-btn-outline" onClick={() => navigate("/")}>
+        <div className="ds-card" style={{ maxWidth: 420, padding: 24, textAlign: "center" }}>
+          <p className="ds-auth-error">{error || "Pass not found"}</p>
+          <button type="button" className="ds-btn-secondary" onClick={() => navigate("/")}>
             Go to Home
           </button>
         </div>

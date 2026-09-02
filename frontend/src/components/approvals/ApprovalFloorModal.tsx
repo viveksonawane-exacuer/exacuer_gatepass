@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import { settingsApi, type VisitorListRow } from "@/api/vms";
 import { SearchSelect } from "@/components/ui/SearchSelect";
 import { buildFloorOptions } from "@/lib/floorOptions";
 import { initials } from "@/lib/format";
+import { ConfirmModal } from "@/components/design-system/ConfirmModal";
+import { StatusPill } from "@/components/design-system/StatusPill";
 
 type Props = {
   visitor: VisitorListRow | null;
@@ -33,7 +34,6 @@ export function ApprovalFloorModal({ visitor, open, busy = false, onClose, onCon
         if (cancelled) return;
         const options = buildFloorOptions(masters || {});
         setFloors(options);
-        // Keep existing floor only if it still exists in Floor master
         if (visitor.floor && !options.some((o) => o.value === visitor.floor)) {
           setFloor("");
         }
@@ -60,7 +60,7 @@ export function ApprovalFloorModal({ visitor, open, busy = false, onClose, onCon
     [floors],
   );
 
-  if (!open || !visitor) return null;
+  if (!visitor) return null;
 
   const visitorName = visitor.full_name || visitor.name;
   const isBusy = busy || submitting;
@@ -86,44 +86,54 @@ export function ApprovalFloorModal({ visitor, open, busy = false, onClose, onCon
     }
   }
 
-  return createPortal(
-    <div className="vm-confirm-modal-root" role="dialog" aria-modal="true" aria-labelledby="vm-approval-floor-title">
-      <button type="button" className="vm-confirm-modal-backdrop" onClick={onClose} aria-label="Close" />
-
-      <div className="vm-confirm-modal-card vm-checkin-floor-card">
-        <button type="button" className="vm-confirm-modal-close" onClick={onClose} aria-label="Close">
-          ✕
-        </button>
-
-        <div className="vm-confirm-modal-top">
-          <div className="vm-confirm-modal-icon-badge is-checkin" aria-hidden>
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M9 11l3 3L22 4" />
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
+  return (
+    <ConfirmModal
+      open={open}
+      onClose={onClose}
+      showClose
+      title="Approve Visitor"
+      subtitle={
+        <>
+          Select the floor for <strong>{visitorName}</strong> before approval.
+        </>
+      }
+      titleId="vm-approval-floor-title"
+      icon={
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+      }
+      iconTone="success"
+      footer={
+        <>
+          <button type="button" className="ds-btn-secondary" disabled={isBusy} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ds-btn-primary"
+            disabled={isBusy || loadingFloors || floors.length === 0}
+            onClick={() => void handleConfirm()}
+          >
+            {isBusy ? "Approving…" : "Approve"}
+          </button>
+        </>
+      }
+    >
+      <div className="ds-confirm-modal__body">
+        <div className="ds-confirm-modal__visitor">
+          <div className="ds-schedule-card__avatar">{initials(visitorName)}</div>
+          <div className="ds-confirm-modal__visitor-copy">
+            <strong>{visitorName}</strong>
+            <span>{visitor.name}</span>
           </div>
-          <h2 id="vm-approval-floor-title" className="vm-confirm-modal-title">
-            Approve Visitor
-          </h2>
-          <p className="vm-confirm-modal-sub">
-            Select the floor for <strong>{visitorName}</strong> before approval.
-          </p>
+          <StatusPill label="Pending" variant="pending" />
         </div>
 
-        <div className="vm-confirm-modal-info-box">
-          <div className="vm-confirm-modal-visitor-row">
-            <div className="vm-activity-avatar avatar-orange">{initials(visitorName)}</div>
-            <div className="vm-confirm-modal-visitor-copy">
-              <strong>{visitorName}</strong>
-              <span>{visitor.name}</span>
-            </div>
-            <span className="vm-badge-pending">PENDING</span>
-          </div>
-        </div>
-
-        <div className="vm-checkin-floor-form">
-          <label className="vm-sheet-label" htmlFor="approval-floor-select">
-            Floor No. <span className="vm-required-star" aria-hidden>*</span>
+        <div className="ds-form-field">
+          <label className="ds-form-field__label" htmlFor="approval-floor-select">
+            Floor No. <span className="ds-form-field__required">*</span>
           </label>
           <SearchSelect
             id="approval-floor-select"
@@ -144,24 +154,9 @@ export function ApprovalFloorModal({ visitor, open, busy = false, onClose, onCon
             menuPlacement="top"
             aria-label="Floor"
           />
-          {error ? <p className="login-error vm-sheet-error">{error}</p> : null}
-        </div>
-
-        <div className="vm-confirm-modal-actions">
-          <button type="button" className="vm-confirm-act-btn is-secondary" disabled={isBusy} onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="vm-confirm-act-btn is-primary"
-            disabled={isBusy || loadingFloors || floors.length === 0}
-            onClick={() => void handleConfirm()}
-          >
-            {isBusy ? "Approving…" : "Approve"}
-          </button>
+          {error ? <p className="ds-auth-error">{error}</p> : null}
         </div>
       </div>
-    </div>,
-    document.body,
+    </ConfirmModal>
   );
 }

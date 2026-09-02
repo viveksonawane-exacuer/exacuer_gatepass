@@ -11,7 +11,7 @@ type VisitorWelcomePanelProps = {
   onGetStarted: () => void;
 };
 
-/** Add Visitor flow — light welcome splash with official brand wordmark. */
+/** Add Visitor flow — welcome splash inside check-in. */
 export function VisitorWelcomePanel({ lang, onLangChange, onGetStarted }: VisitorWelcomePanelProps) {
   const navigate = useNavigate();
   const [activePoint, setActivePoint] = useState<"verify" | "host" | "pass">("verify");
@@ -27,30 +27,25 @@ export function VisitorWelcomePanel({ lang, onLangChange, onGetStarted }: Visito
   );
 
   return (
-    <div className="welcome-page welcome-splash welcome-in-flow welcome-light" lang={lang}>
-      <div className="welcome-top-row">
-        <button
-          type="button"
-          className="welcome-home-btn"
-          onClick={() => navigate("/")}
-          aria-label={vt(lang, "back_home")}
-          title={vt(lang, "back_home")}
-        >
-          ‹ {vt(lang, "back_home")}
-        </button>
-      </div>
+    <div className="ds-welcome-page" lang={lang}>
+      <button
+        type="button"
+        className="ds-welcome-back"
+        onClick={() => navigate("/")}
+        aria-label={vt(lang, "back_home")}
+      >
+        ‹ {vt(lang, "back_home")}
+      </button>
 
-      <header className="welcome-brand">
+      <header className="ds-welcome-brand">
         <BrandLogo variant="full" className="welcome-wordmark" />
-        <p className="welcome-brand-tag">{vt(lang, "brand_tag")}</p>
+        <p className="ds-welcome-brand__tag">{vt(lang, "brand_tag")}</p>
       </header>
 
-      <div className="welcome-copy">
-        <h1 className="welcome-title">{vt(lang, "welcome_title")}</h1>
-      </div>
+      <h1 className="ds-welcome-title">{vt(lang, "welcome_title")}</h1>
 
-      <section className="welcome-security-panel" aria-label="Check-in steps">
-        <div className="welcome-security-tabs" role="tablist" aria-label="Check-in steps">
+      <section aria-label="Check-in steps">
+        <div className="ds-welcome-tabs" role="tablist" aria-label="Check-in steps">
           {securityPoints.map((point) => {
             const selected = point.id === activePoint;
             return (
@@ -59,7 +54,7 @@ export function VisitorWelcomePanel({ lang, onLangChange, onGetStarted }: Visito
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                className={`welcome-security-tab${selected ? " is-active" : ""}`}
+                className={`ds-welcome-tab${selected ? " is-active" : ""}`}
                 onClick={() => setActivePoint(point.id)}
               >
                 {point.title}
@@ -69,14 +64,9 @@ export function VisitorWelcomePanel({ lang, onLangChange, onGetStarted }: Visito
         </div>
       </section>
 
-      <div className="welcome-actions">
-        <button type="button" className="welcome-cta" onClick={onGetStarted}>
-          <span className="welcome-cta-label">{vt(lang, "get_started")}</span>
-          <span className="welcome-cta-arrow" aria-hidden>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </span>
+      <div className="ds-welcome-actions">
+        <button type="button" className="ds-btn-primary" onClick={onGetStarted}>
+          {vt(lang, "get_started")}
         </button>
         <PwaInstallButton variant="welcome" />
       </div>

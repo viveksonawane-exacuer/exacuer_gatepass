@@ -8,76 +8,70 @@ interface CheckInSuccessCardProps {
 }
 
 export function CheckInSuccessCard({
-  hostName = "Rahul Mehta",
-  department = "Production Dept.",
-  checkInTime = "23 Jul 2026, 09:15 AM",
-  duration = "06:15 Hrs",
+  hostName = "—",
+  department = "—",
+  checkInTime = "—",
+  duration = "—",
   busy = false,
   onGeneratePass,
 }: CheckInSuccessCardProps) {
   return (
-    <div style={{ textAlign: "center" }}>
-      {/* Green Radiating Aura Circle */}
-      <div
-        style={{
-          width: "90px",
-          height: "90px",
-          borderRadius: "50%",
-          background: "#DCFCE7",
-          margin: "0.5rem auto 1.25rem",
-          display: "grid",
-          placeItems: "center",
-          fontSize: "2.5rem",
-          color: "#16A34A",
-          boxShadow: "0 0 0 12px #F0FDF4",
-        }}
-      >
+    <div className="ds-journey-success">
+      <div className="ds-journey-success__icon" aria-hidden>
         ✓
       </div>
+      <h1 className="ds-journey-success__title">Checked in successfully</h1>
+      <p className="ds-journey-success__sub">Your visit has been recorded at the gate.</p>
 
-      <h1 className="vm-page-title" style={{ fontSize: "1.35rem", textAlign: "center" }}>
-        Checked-in Successfully!
-      </h1>
-      <p style={{ textAlign: "center", color: "#64748B", fontSize: "0.85rem", margin: "0.3rem 0 1.5rem" }}>
-        Your visit has been recorded.
-      </p>
-
-      {/* Visit Info Card */}
-      <div style={{ background: "#F8FAFC", borderRadius: "16px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.85rem", border: "1px solid #E2E8F0", marginBottom: "1.25rem", textAlign: "left" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>👤</div>
+      <div className="ds-journey-info-card">
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>To Meet</span>
-            <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0F172A" }}>{hostName}</span>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>{department}</span>
+            <span className="ds-journey-info-row__label">To meet</span>
+            <span className="ds-journey-info-row__value">{hostName}</span>
+            <span className="ds-journey-info-row__meta">{department}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #E2E8F0", paddingTop: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>📅</div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Check-in Time</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{checkInTime}</span>
+            <span className="ds-journey-info-row__label">Check-in time</span>
+            <span className="ds-journey-info-row__value">{checkInTime}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #E2E8F0", paddingTop: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>🕒</div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Visit Duration (Expected)</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{duration}</span>
+            <span className="ds-journey-info-row__label">Expected duration</span>
+            <span className="ds-journey-info-row__value">{duration}</span>
           </div>
         </div>
       </div>
 
-      {/* Notification Banner */}
-      <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "12px", padding: "0.75rem 0.85rem", display: "flex", alignItems: "center", gap: "0.55rem", fontSize: "0.82rem", color: "#1E40AF", marginBottom: "1.25rem", textAlign: "left" }}>
-        <span>ℹ️</span>
-        <span>You will be notified once approved.</span>
+      <div className="ds-journey-notice" role="status">
+        <span aria-hidden>ℹ</span>
+        <span>You will be notified once your gate pass is ready.</span>
       </div>
 
-      <button type="button" className="vm-btn-primary" disabled={busy} onClick={onGeneratePass} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-        💳 {busy ? "Loading…" : "Generate Gate Pass"}
+      <button type="button" className="ds-btn-primary" style={{ width: "100%" }} disabled={busy} onClick={onGeneratePass}>
+        {busy ? "Loading…" : "Generate gate pass"}
       </button>
     </div>
   );

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import { approvalApi, settingsApi, type VisitorListRow } from "@/api/vms";
 import { SearchSelect } from "@/components/ui/SearchSelect";
+import { ConfirmModal } from "@/components/design-system/ConfirmModal";
+import { StatusPill } from "@/components/design-system/StatusPill";
 import { initials } from "@/lib/format";
 
 type Props = {
@@ -62,7 +63,7 @@ export function ApprovalTransferModal({ visitor, open, busy = false, onClose, on
     [hosts, visitor?.person_to_meet],
   );
 
-  if (!open || !visitor) return null;
+  if (!visitor) return null;
 
   const visitorName = visitor.full_name || visitor.name;
   const isBusy = busy || submitting;
@@ -90,42 +91,53 @@ export function ApprovalTransferModal({ visitor, open, busy = false, onClose, on
     }
   }
 
-  return createPortal(
-    <div className="vm-confirm-modal-root" role="dialog" aria-modal="true" aria-labelledby="vm-approval-transfer-title">
-      <button type="button" className="vm-confirm-modal-backdrop" onClick={onClose} aria-label="Close" />
-
-      <div className="vm-confirm-modal-card vm-checkin-floor-card">
-        <button type="button" className="vm-confirm-modal-close" onClick={onClose} aria-label="Close">
-          ✕
-        </button>
-
-        <div className="vm-confirm-modal-top">
-          <div className="vm-confirm-modal-icon-badge is-checkin" aria-hidden>
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M16 3h5v5M8 21H3v-5M21 3l-7 7M3 21l7-7" />
-            </svg>
+  return (
+    <ConfirmModal
+      open={open}
+      onClose={onClose}
+      showClose
+      title="Transfer Visitor"
+      subtitle={
+        <>
+          Reassign <strong>{visitorName}</strong> to another host.
+        </>
+      }
+      titleId="vm-approval-transfer-title"
+      icon={
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <path d="M16 3h5v5M8 21H3v-5M21 3l-7 7M3 21l7-7" />
+        </svg>
+      }
+      iconTone="info"
+      actionsClassName="is-row"
+      footer={
+        <>
+          <button type="button" className="ds-btn-secondary" disabled={isBusy} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="ds-btn-primary"
+            disabled={isBusy || loadingHosts}
+            onClick={() => void handleTransfer()}
+          >
+            {isBusy ? "Transferring…" : "Transfer"}
+          </button>
+        </>
+      }
+    >
+      <div className="ds-confirm-modal__body">
+        <div className="ds-confirm-modal__visitor">
+          <div className="ds-schedule-card__avatar">{initials(visitorName)}</div>
+          <div className="ds-confirm-modal__visitor-copy">
+            <strong>{visitorName}</strong>
+            <span>{visitor.name}</span>
           </div>
-          <h2 id="vm-approval-transfer-title" className="vm-confirm-modal-title">
-            Transfer Visitor
-          </h2>
-          <p className="vm-confirm-modal-sub">
-            Reassign <strong>{visitorName}</strong> to another host.
-          </p>
+          <StatusPill label="Pending" variant="pending" />
         </div>
 
-        <div className="vm-confirm-modal-info-box">
-          <div className="vm-confirm-modal-visitor-row">
-            <div className="vm-activity-avatar avatar-orange">{initials(visitorName)}</div>
-            <div className="vm-confirm-modal-visitor-copy">
-              <strong>{visitorName}</strong>
-              <span>{visitor.name}</span>
-            </div>
-            <span className="vm-badge-pending">PENDING</span>
-          </div>
-        </div>
-
-        <div className="vm-checkin-floor-form">
-          <label className="vm-sheet-label" htmlFor="approval-transfer-host">
+        <div className="ds-form-field">
+          <label className="ds-form-field__label" htmlFor="approval-transfer-host">
             Transfer to
           </label>
           <SearchSelect
@@ -146,7 +158,10 @@ export function ApprovalTransferModal({ visitor, open, busy = false, onClose, on
             menuPlacement="top"
             aria-label="Transfer to"
           />
-          <label className="vm-sheet-label" htmlFor="approval-transfer-remarks">
+        </div>
+
+        <div className="ds-form-field">
+          <label className="ds-form-field__label" htmlFor="approval-transfer-remarks">
             Reason / Remarks (required)
           </label>
           <textarea
@@ -158,24 +173,9 @@ export function ApprovalTransferModal({ visitor, open, busy = false, onClose, on
             rows={2}
             disabled={isBusy}
           />
-          {error ? <p className="login-error vm-sheet-error">{error}</p> : null}
-        </div>
-
-        <div className="vm-confirm-modal-actions">
-          <button type="button" className="vm-confirm-act-btn is-secondary" disabled={isBusy} onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="vm-confirm-act-btn is-primary"
-            disabled={isBusy || loadingHosts}
-            onClick={() => void handleTransfer()}
-          >
-            {isBusy ? "Transferring…" : "Transfer"}
-          </button>
+          {error ? <p className="ds-auth-error">{error}</p> : null}
         </div>
       </div>
-    </div>,
-    document.body,
+    </ConfirmModal>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmModal } from "@/components/design-system/ConfirmModal";
 import { enableHostAlertPermissions } from "@/services/hostAlertManager";
 import { isNativePlatform } from "@/native/platform";
 import { notificationPermissionState } from "@/native/services/notifications";
@@ -60,12 +61,19 @@ export function clearNotificationPermissionSkip(): void {
   localStorage.removeItem(SETUP_DONE_KEY);
 }
 
+function IconBell() {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
 export function NotificationPermissionModal({ open, onClose, onEnabled }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const denied = notificationPermissionState() === "denied";
-
-  if (!open) return null;
 
   async function onAllow() {
     setBusy(true);
@@ -100,45 +108,42 @@ export function NotificationPermissionModal({ open, onClose, onEnabled }: Props)
   }
 
   return (
-    <div className="vm-notify-perm-modal" role="dialog" aria-modal="true" aria-labelledby="vm-notify-perm-title">
-      <div className="vm-notify-perm-backdrop" aria-hidden />
-      <div className="vm-notify-perm-card">
-        <div className="vm-notify-perm-icon" aria-hidden>
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-        </div>
-
-        <h2 id="vm-notify-perm-title" className="vm-notify-perm-title">
-          Allow background notifications
-        </h2>
-        <p className="vm-notify-perm-body">
-          {denied
-            ? "Notifications are blocked. Open your phone Settings → GatePass → Notifications and turn them on for visitor ring alerts."
-            : "Enable notifications so you get visitor alerts even when GatePass is closed or in the background."}
-        </p>
-
-        <ul className="vm-notify-perm-list">
+    <ConfirmModal
+      open={open}
+      onClose={onClose}
+      closeOnBackdrop={false}
+      title="Allow background notifications"
+      subtitle={
+        denied
+          ? "Notifications are blocked. Open your phone Settings → GatePass → Notifications and turn them on for visitor ring alerts."
+          : "Enable notifications so you get visitor alerts even when GatePass is closed or in the background."
+      }
+      titleId="vm-notify-perm-title"
+      icon={<IconBell />}
+      iconTone="info"
+      actionsClassName="is-stack"
+      footer={
+        <>
+          {!denied ? (
+            <button type="button" className="ds-btn-primary" onClick={() => void onAllow()} disabled={busy}>
+              {busy ? "Please wait…" : "Enable background alerts"}
+            </button>
+          ) : null}
+          <button type="button" className={denied ? "ds-btn-primary" : "ds-btn-secondary"} onClick={onSkip}>
+            {denied ? "Continue without alerts" : "Not now"}
+          </button>
+        </>
+      }
+    >
+      <div className="ds-confirm-modal__body">
+        <ul className="ds-notify-perm-list">
           <li>System notification when a visitor is waiting</li>
           <li>Works with the app closed (background)</li>
           <li>Ring + vibration when the app is open</li>
         </ul>
-
-        {error ? <p className="vm-notify-perm-error">{error}</p> : null}
-
-        <div className="vm-notify-perm-actions">
-          {!denied ? (
-            <button type="button" className="vm-notify-perm-allow" onClick={() => void onAllow()} disabled={busy}>
-              {busy ? "Please wait…" : "Enable background alerts"}
-            </button>
-          ) : null}
-          <button type="button" className="vm-notify-perm-skip" onClick={onSkip}>
-            {denied ? "Continue without alerts" : "Not now"}
-          </button>
-        </div>
+        {error ? <p className="ds-auth-error">{error}</p> : null}
       </div>
-    </div>
+    </ConfirmModal>
   );
 }
 

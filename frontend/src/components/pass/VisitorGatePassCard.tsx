@@ -92,120 +92,116 @@ export function VisitorGatePassCard({
   }
 
   return (
-    <div className="vm-gatepass-modern-root" id="vms-gate-pass-print">
-      <div className="vm-gate-pass-print-banner vm-print-only" aria-hidden>
+    <div className="ds-gatepass-root" id="vms-gate-pass-print">
+      <div className="ds-gatepass-print-banner" aria-hidden>
         <strong>{companyLabel}</strong>
         <span>Official Visitor Gate Pass</span>
       </div>
 
-      {/* Main Glass Pass Container */}
-      <div className="vm-gatepass-ticket-card">
-        {/* Pass Top Branding Bar */}
-        <div className="vm-ticket-top-bar">
-          <div className="vm-ticket-brand">
-            <BrandLogo variant="icon" className="vm-ticket-logo" />
-            <div className="vm-ticket-brand-text">
-              <strong className="vm-ticket-company-title">{companyLabel}</strong>
-              <span className="vm-ticket-subtitle">Official Digital Pass</span>
+      <div className="ds-gatepass-card">
+        <div className="ds-gatepass-card__header">
+          <div className="ds-gatepass-card__brand">
+            <BrandLogo variant="icon" className="ds-gatepass-card__logo" />
+            <div className="ds-gatepass-card__brand-copy">
+              <strong className="ds-gatepass-card__company">{companyLabel}</strong>
+              <span className="ds-gatepass-card__subtitle">Official Digital Pass</span>
             </div>
           </div>
 
-          <div className="vm-ticket-status-badge">
-            <span className="vm-status-dot" aria-hidden />
+          <div className="ds-gatepass-card__status">
+            <span className="ds-gatepass-card__status-dot" aria-hidden />
             <span>{(status || "APPROVED").toUpperCase()}</span>
           </div>
         </div>
 
-        {/* Visitor Photo & Identity Strip */}
-        <div className="vm-ticket-visitor-section">
-          <div className="vm-ticket-photo-wrapper">
+        <div className="ds-gatepass-card__visitor">
+          <div className="ds-gatepass-card__photo-wrap">
             {photo ? (
-              <img src={photo} alt={visitorName} className="vm-ticket-photo-img" />
+              <img src={photo} alt={visitorName} className="ds-gatepass-card__photo" />
             ) : (
-              <div className="vm-ticket-avatar-fallback">
+              <div className="ds-gatepass-card__photo-fallback">
                 <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
                 </svg>
               </div>
             )}
-            <span className="vm-ticket-verified-check">✓</span>
+            <span className="ds-gatepass-card__verified" aria-hidden>
+              ✓
+            </span>
           </div>
 
-          <div className="vm-ticket-visitor-info">
-            <span className="vm-ticket-pass-id">{passCode}</span>
-            <h2 className="vm-ticket-visitor-name">{visitorName}</h2>
-            <span className="vm-ticket-company-tag">{visitorCompanyLabel}</span>
+          <div className="ds-gatepass-card__identity">
+            <span className="ds-gatepass-card__pass-id">{passCode}</span>
+            <h2 className="ds-gatepass-card__name">{visitorName}</h2>
+            <span className="ds-gatepass-card__company-tag">{visitorCompanyLabel}</span>
           </div>
         </div>
 
-        {/* Centered QR Viewfinder Frame */}
-        <div className="vm-ticket-qr-container">
-          <div className="vm-ticket-qr-box">
-            <span className="vm-qr-corner c-tl" />
-            <span className="vm-qr-corner c-tr" />
-            <span className="vm-qr-corner c-bl" />
-            <span className="vm-qr-corner c-br" />
-            <img src={qrSrc} alt="Visitor Pass QR" className="vm-ticket-qr-image" />
+        <div className="ds-gatepass-card__scan">
+          <div className="ds-gatepass-card__qr-frame">
+            <img src={qrSrc} alt="Visitor Pass QR" className="ds-gatepass-card__qr-img" />
+            <div className="ds-gatepass-card__barcode" aria-hidden />
           </div>
 
-          <div className="vm-ticket-validity-pill">
+          <div className="ds-gatepass-card__validity">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span>Valid Until: <strong>{validUntil || "Today EOD"}</strong></span>
+            <span>
+              Valid Until: <strong>{validUntil || "Today EOD"}</strong>
+            </span>
           </div>
         </div>
 
-        {/* Ticket Perforated Dotted Divider */}
-        <div className="vm-ticket-perforation">
-          <span className="vm-perf-notch-left" />
-          <div className="vm-perf-line" />
-          <span className="vm-perf-notch-right" />
+        <div className="ds-gatepass-card__perf">
+          <span className="ds-gatepass-card__perf-notch is-left" />
+          <div className="ds-gatepass-card__perf-line" />
+          <span className="ds-gatepass-card__perf-notch is-right" />
         </div>
 
-        {/* 2-Column Info Grid */}
-        <div className="vm-ticket-details-grid">
-          <div className="vm-ticket-detail-item">
-            <span className="vm-tdetail-label">Host Person</span>
-            <strong className="vm-tdetail-val">{hostName}</strong>
+        <div className="ds-gatepass-card__details">
+          <div className="ds-gatepass-card__detail">
+            <span className="ds-gatepass-card__detail-label">Host Person</span>
+            <strong className="ds-gatepass-card__detail-value">{hostName}</strong>
           </div>
 
-          <div className="vm-ticket-detail-item">
-            <span className="vm-tdetail-label">Floor / Dept</span>
-            <strong className="vm-tdetail-val">{floor || "Ground Floor"}</strong>
+          <div className="ds-gatepass-card__detail">
+            <span className="ds-gatepass-card__detail-label">Floor / Dept</span>
+            <strong className="ds-gatepass-card__detail-value">{floor || "Ground Floor"}</strong>
           </div>
 
-          <div className="vm-ticket-detail-item">
-            <span className="vm-tdetail-label">Visitors</span>
-            <strong className="vm-tdetail-val">{count} {count > 1 ? "Guests" : "Person"}</strong>
+          <div className="ds-gatepass-card__detail">
+            <span className="ds-gatepass-card__detail-label">Visitors</span>
+            <strong className="ds-gatepass-card__detail-value">
+              {count} {count > 1 ? "Guests" : "Person"}
+            </strong>
           </div>
 
-          <div className="vm-ticket-detail-item">
-            <span className="vm-tdetail-label">Location</span>
-            <strong className="vm-tdetail-val">{checkInLocation || "Main Gate"}</strong>
+          <div className="ds-gatepass-card__detail">
+            <span className="ds-gatepass-card__detail-label">Location</span>
+            <strong className="ds-gatepass-card__detail-value">{checkInLocation || "Main Gate"}</strong>
           </div>
 
-          {showGuestNames && (
-            <div className="vm-ticket-detail-item is-full">
-              <span className="vm-tdetail-label">Guest Names</span>
-              <strong className="vm-tdetail-val">{guestNamesLine}</strong>
+          {showGuestNames ? (
+            <div className="ds-gatepass-card__detail is-full">
+              <span className="ds-gatepass-card__detail-label">Guest Names</span>
+              <strong className="ds-gatepass-card__detail-value">{guestNamesLine}</strong>
             </div>
-          )}
+          ) : null}
         </div>
 
-        {noticeMessage && (
-          <div className="vm-ticket-notice">
-            <span>ℹ️ {noticeMessage}</span>
+        {noticeMessage ? (
+          <div className="ds-gatepass-card__notice">
+            <span>{noticeMessage}</span>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* Action Buttons Bar */}
-      {!hideActions && (
-        <div className="vm-ticket-actions-bar vm-no-print">
-          <button type="button" className="vm-ticket-action-btn is-print" onClick={handlePrint}>
+      {!hideActions ? (
+        <div className="ds-gatepass-actions ds-no-print">
+          <button type="button" className="ds-gatepass-action-btn is-primary" onClick={handlePrint}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 6 2 18 2 18 9" />
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
@@ -214,7 +210,7 @@ export function VisitorGatePassCard({
             <span>Print Pass</span>
           </button>
 
-          <button type="button" className="vm-ticket-action-btn is-share" onClick={handleShare}>
+          <button type="button" className="ds-gatepass-action-btn" onClick={handleShare}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="18" cy="5" r="3" />
               <circle cx="6" cy="12" r="3" />
@@ -225,13 +221,13 @@ export function VisitorGatePassCard({
             <span>Share Link</span>
           </button>
 
-          {onExit && (
-            <button type="button" className="vm-ticket-action-btn is-close" onClick={onExit}>
+          {onExit ? (
+            <button type="button" className="ds-gatepass-action-btn is-ghost" onClick={onExit}>
               <span>Close</span>
             </button>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

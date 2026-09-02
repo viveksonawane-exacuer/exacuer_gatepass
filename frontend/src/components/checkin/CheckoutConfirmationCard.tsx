@@ -10,134 +10,81 @@ interface CheckoutConfirmationCardProps {
 }
 
 export function CheckoutConfirmationCard({
-  hostName = "Rahul Mehta",
-  department = "Production Dept.",
-  checkInTime = "23 Jul 2026, 09:15 AM",
-  expectedCheckout = "05:30 PM",
-  expectedDuration = "08:15 Hrs",
+  hostName = "—",
+  department = "—",
+  checkInTime = "—",
+  expectedCheckout = "—",
+  expectedDuration = "—",
   busy = false,
   onConfirmCheckout,
   onCancel,
 }: CheckoutConfirmationCardProps) {
   return (
-    <div style={{ textAlign: "center" }}>
-      {/* Exit Door Orange Circle Badge */}
-      <div
-        style={{
-          width: "80px",
-          height: "80px",
-          borderRadius: "50%",
-          background: "#FFEDD5",
-          margin: "0.5rem auto 1rem",
-          display: "grid",
-          placeItems: "center",
-          fontSize: "2.2rem",
-          color: "#EA580C",
-          boxShadow: "0 0 0 10px #FFF7ED",
-        }}
-      >
-        🚪
+    <div className="ds-journey-success">
+      <div className="ds-journey-success__icon ds-journey-success__icon--checkout" aria-hidden>
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
       </div>
+      <h1 className="ds-journey-success__title">Check-out</h1>
+      <p className="ds-journey-success__sub">Confirm you are leaving the premises.</p>
 
-      <h1 className="vm-page-title" style={{ fontSize: "1.35rem", textAlign: "center", color: "#0F172A" }}>
-        Check-out
-      </h1>
-      <p style={{ textAlign: "center", color: "#64748B", fontSize: "0.85rem", margin: "0.25rem 0 1.25rem" }}>
-        Are you sure you want to check-out?
-      </p>
-
-      {/* Details Card */}
-      <div
-        style={{
-          background: "#F8FAFC",
-          borderRadius: "16px",
-          padding: "1rem",
-          border: "1px solid #E2E8F0",
-          marginBottom: "1rem",
-          textAlign: "left",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#EFF6FF", color: "#2563EB", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            👤
-          </div>
+      <div className="ds-journey-info-card">
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>To Meet</span>
-            <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0F172A" }}>{hostName}</span>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>{department}</span>
+            <span className="ds-journey-info-row__label">To meet</span>
+            <span className="ds-journey-info-row__value">{hostName}</span>
+            <span className="ds-journey-info-row__meta">{department}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #E2E8F0", paddingTop: "0.65rem", marginBottom: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#EFF6FF", color: "#2563EB", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            📅
-          </div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Check-in Time</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{checkInTime}</span>
+            <span className="ds-journey-info-row__label">Check-in time</span>
+            <span className="ds-journey-info-row__value">{checkInTime}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #E2E8F0", paddingTop: "0.65rem", marginBottom: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#EFF6FF", color: "#2563EB", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            🕒
-          </div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Expected Check-out</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{expectedCheckout}</span>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #E2E8F0", paddingTop: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#EFF6FF", color: "#2563EB", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            ⏳
-          </div>
-          <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Expected Duration</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{expectedDuration}</span>
+            <span className="ds-journey-info-row__label">Expected check-out</span>
+            <span className="ds-journey-info-row__value">{expectedCheckout}</span>
+            <span className="ds-journey-info-row__meta">Duration: {expectedDuration}</span>
           </div>
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div
-        style={{
-          background: "#EFF6FF",
-          border: "1px solid #BFDBFE",
-          borderRadius: "12px",
-          padding: "0.75rem 0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.55rem",
-          fontSize: "0.82rem",
-          color: "#1E40AF",
-          marginBottom: "1.25rem",
-          textAlign: "left",
-        }}
-      >
-        <span>ℹ️</span>
+      <div className="ds-journey-notice" role="status">
+        <span aria-hidden>ℹ</span>
         <span>After check-out, your visit will be completed and recorded.</span>
       </div>
 
-      {/* Buttons */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-        <button
-          type="button"
-          className="vm-btn-primary"
-          disabled={busy}
-          onClick={onConfirmCheckout}
-          style={{ background: "linear-gradient(135deg, #0A3D91 0%, #1D4ED8 100%)", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
-        >
-          🚪 {busy ? "Checking-out…" : "Confirm Check-out"}
+      <div className="ds-detail-footer">
+        <button type="button" className="ds-btn-primary" style={{ width: "100%" }} disabled={busy} onClick={onConfirmCheckout}>
+          {busy ? "Checking out…" : "Confirm check-out"}
         </button>
-
         {onCancel ? (
-          <button
-            type="button"
-            className="vm-btn-outline"
-            onClick={onCancel}
-            style={{ color: "#475569", borderColor: "#CBD5E1", background: "#FFFFFF" }}
-          >
+          <button type="button" className="ds-btn-secondary" style={{ width: "100%" }} onClick={onCancel}>
             Cancel
           </button>
         ) : null}

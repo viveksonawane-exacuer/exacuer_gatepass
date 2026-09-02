@@ -9,125 +9,70 @@ interface MeetingInProgressCardProps {
 }
 
 export function MeetingInProgressCard({
-  hostName = "Rahul Mehta",
-  department = "Production Dept.",
-  checkInTime = "23 Jul 2026, 09:15 AM",
-  expectedCheckout = "05:30 PM",
-  expectedDuration = "08:15 Hrs",
+  hostName = "—",
+  department = "—",
+  checkInTime = "—",
+  expectedCheckout = "—",
+  expectedDuration = "—",
   busy = false,
   onFinishMeeting,
 }: MeetingInProgressCardProps) {
   return (
-    <div style={{ textAlign: "center" }}>
-      {/* Light Green Avatar Circle Badge */}
-      <div
-        style={{
-          width: "80px",
-          height: "80px",
-          borderRadius: "50%",
-          background: "#DCFCE7",
-          margin: "0.5rem auto 1rem",
-          display: "grid",
-          placeItems: "center",
-          fontSize: "2.2rem",
-          color: "#16A34A",
-          boxShadow: "0 0 0 10px #F0FDF4",
-        }}
-      >
-        👥
+    <div className="ds-journey-success">
+      <div className="ds-journey-success__icon ds-journey-success__icon--meeting" aria-hidden>
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+        </svg>
       </div>
+      <h1 className="ds-journey-success__title">Meeting in progress</h1>
+      <p className="ds-journey-success__sub">You are checked in and your meeting is underway.</p>
 
-      <h1 className="vm-page-title" style={{ fontSize: "1.35rem", textAlign: "center", color: "#0F172A" }}>
-        Meeting in Progress
-      </h1>
-      <p style={{ textAlign: "center", color: "#64748B", fontSize: "0.85rem", margin: "0.25rem 0 1.25rem" }}>
-        You are checked-in / Meeting in progress
-      </p>
-
-      {/* Light Green To Meet Card */}
-      <div
-        style={{
-          background: "#F0FDF4",
-          borderRadius: "16px",
-          padding: "1rem",
-          border: "1px solid #DCFCE7",
-          marginBottom: "1rem",
-          textAlign: "left",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            👤
-          </div>
+      <div className="ds-journey-info-card">
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>To Meet</span>
-            <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0F172A" }}>{hostName}</span>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>{department}</span>
+            <span className="ds-journey-info-row__label">To meet</span>
+            <span className="ds-journey-info-row__value">{hostName}</span>
+            <span className="ds-journey-info-row__meta">{department}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #DCFCE7", paddingTop: "0.65rem", marginBottom: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            📅
-          </div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Check-in Time</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{checkInTime}</span>
+            <span className="ds-journey-info-row__label">Check-in time</span>
+            <span className="ds-journey-info-row__value">{checkInTime}</span>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", borderTop: "1px solid #DCFCE7", paddingTop: "0.65rem" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#DCFCE7", color: "#16A34A", display: "grid", placeItems: "center", fontSize: "1rem" }}>
-            🕒
-          </div>
+        <div className="ds-journey-info-row">
+          <span className="ds-journey-info-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </span>
           <div>
-            <span style={{ fontSize: "0.75rem", color: "#64748B", display: "block" }}>Expected Check-out</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0F172A" }}>{expectedCheckout}</span>
+            <span className="ds-journey-info-row__label">Expected check-out</span>
+            <span className="ds-journey-info-row__value">{expectedCheckout}</span>
+            <span className="ds-journey-info-row__meta">Duration: {expectedDuration}</span>
           </div>
         </div>
       </div>
 
-      {/* Light Blue Visit Details Card */}
-      <div
-        style={{
-          background: "#F8FAFC",
-          borderRadius: "16px",
-          padding: "0.85rem 1rem",
-          border: "1px solid #E2E8F0",
-          marginBottom: "1.25rem",
-          textAlign: "left",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", marginBottom: "0.65rem", color: "#2563EB", fontWeight: 700, fontSize: "0.88rem" }}>
-          <span>🛡️</span>
-          <span>Visit Details</span>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem", fontSize: "0.82rem", color: "#475569" }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>🕒 Check-in Time</span>
-            <span style={{ fontWeight: 700, color: "#0F172A" }}>{checkInTime}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>🕒 Expected Check-out</span>
-            <span style={{ fontWeight: 700, color: "#0F172A" }}>{expectedCheckout}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>⏳ Expected Duration</span>
-            <span style={{ fontWeight: 700, color: "#0F172A" }}>{expectedDuration}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Button */}
-      <button
-        type="button"
-        className="vm-btn-primary"
-        disabled={busy}
-        onClick={onFinishMeeting}
-        style={{ background: "linear-gradient(135deg, #0A3D91 0%, #1D4ED8 100%)", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
-      >
-        ✓ {busy ? "Processing…" : "I’m Done with Meeting"}
+      <button type="button" className="ds-btn-primary" style={{ width: "100%" }} disabled={busy} onClick={onFinishMeeting}>
+        {busy ? "Processing…" : "I'm done with meeting"}
       </button>
     </div>
   );

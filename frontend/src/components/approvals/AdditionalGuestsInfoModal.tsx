@@ -1,4 +1,5 @@
 import type { AdditionalGuest } from "@/lib/additionalGuests";
+import { ConfirmModal } from "@/components/design-system/ConfirmModal";
 
 type Props = {
   open: boolean;
@@ -15,56 +16,44 @@ export function AdditionalGuestsInfoModal({
   guests,
   onClose,
 }: Props) {
-  if (!open) return null;
-
   return (
-    <div
-      className="vm-confirm-modal-root"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="vm-additional-guests-info-title"
+    <ConfirmModal
+      open={open}
+      onClose={onClose}
+      closeOnBackdrop
+      title={`Visitors (${visitorCount})`}
+      subtitle="Primary contact and additional guests for this entry."
+      titleId="vm-additional-guests-info-title"
+      footer={
+        <button type="button" className="ds-btn-primary" onClick={onClose}>
+          Close
+        </button>
+      }
     >
-      <button type="button" className="vm-confirm-modal-backdrop" onClick={onClose} aria-label="Close" />
-
-      <div className="vm-confirm-modal-card vm-additional-guests-card">
-        <div className="vm-confirm-modal-top">
-          <h2 id="vm-additional-guests-info-title" className="vm-confirm-modal-title">
-            Visitors ({visitorCount})
-          </h2>
-          <p className="vm-confirm-modal-sub">
-            Primary contact and additional guests for this entry.
-          </p>
-        </div>
-
-        <div className="vm-additional-guests-list">
-          <div className="vm-additional-guest-row is-readonly">
-            <p className="vm-additional-guest-kicker">Guest 1 (primary)</p>
-            <p className="vm-additional-guest-info-name">{primaryName || "—"}</p>
+      <div className="ds-confirm-modal__body">
+        <div className="ds-guest-list">
+          <div className="ds-guest-list__row">
+            <p className="ds-guest-list__kicker">Guest 1 (primary)</p>
+            <p className="ds-guest-list__name">{primaryName || "—"}</p>
           </div>
 
           {guests.length ? (
             guests.map((guest, index) => (
-              <div key={`${guest.name}-${index}`} className="vm-additional-guest-row is-readonly">
-                <p className="vm-additional-guest-kicker">Guest {index + 2}</p>
-                <p className="vm-additional-guest-info-name">{guest.name.trim() || "—"}</p>
+              <div key={`${guest.name}-${index}`} className="ds-guest-list__row">
+                <p className="ds-guest-list__kicker">Guest {index + 2}</p>
+                <p className="ds-guest-list__name">{guest.name.trim() || "—"}</p>
                 {guest.mobile.trim() ? (
-                  <p className="vm-additional-guest-info-mobile">{guest.mobile.trim()}</p>
+                  <p className="ds-guest-list__mobile">{guest.mobile.trim()}</p>
                 ) : null}
               </div>
             ))
           ) : visitorCount > 1 ? (
-            <p className="vm-confirm-modal-sub" style={{ margin: 0 }}>
+            <p className="ds-confirm-modal__sub" style={{ margin: 0 }}>
               No additional guest details were saved in remarks for this entry.
             </p>
           ) : null}
         </div>
-
-        <div className="vm-confirm-modal-actions">
-          <button type="button" className="vm-confirm-act-btn is-primary" onClick={onClose}>
-            Close
-          </button>
-        </div>
       </div>
-    </div>
+    </ConfirmModal>
   );
 }

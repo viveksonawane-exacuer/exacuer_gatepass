@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { AdditionalGuest } from "@/lib/additionalGuests";
 import { normalizeAdditionalGuests } from "@/lib/additionalGuests";
 import { autocorrectPersonName } from "@/lib/nameCase";
+import { SheetModal } from "@/components/design-system/SheetModal";
 
 type Props = {
   open: boolean;
@@ -28,8 +29,6 @@ export function AdditionalGuestsModal({
     setDraft(normalizeAdditionalGuests(guests, visitorCount));
     setError(null);
   }, [open, guests, visitorCount]);
-
-  if (!open) return null;
 
   const slots = Math.max(0, visitorCount - 1);
 
@@ -63,70 +62,56 @@ export function AdditionalGuestsModal({
   }
 
   return (
-    <div
-      className="vm-confirm-modal-root"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="vm-additional-guests-title"
-    >
-      <button type="button" className="vm-confirm-modal-backdrop" onClick={onClose} aria-label="Close" />
+    <SheetModal open={open} onClose={onClose} title="Additional visitors" ariaLabel="Additional visitors">
+      <p className="ds-confirm-modal__sub" style={{ marginBottom: 14 }}>
+        {visitorCount} visitors total. Enter name and mobile for guest{slots === 1 ? "" : "s"}{" "}
+        2{slots > 1 ? `–${visitorCount}` : ""} (primary contact is guest 1).
+      </p>
 
-      <div className="vm-confirm-modal-card vm-additional-guests-card">
-        <div className="vm-confirm-modal-top">
-          <h2 id="vm-additional-guests-title" className="vm-confirm-modal-title">
-            Additional visitors
-          </h2>
-          <p className="vm-confirm-modal-sub">
-            {visitorCount} visitors total. Enter name and mobile for guest{slots === 1 ? "" : "s"}{" "}
-            2{slots > 1 ? `–${visitorCount}` : ""} (primary contact is guest 1).
-          </p>
-        </div>
-
-        <div className="vm-additional-guests-list">
-          {draft.map((guest, index) => (
-            <div key={index} className="vm-additional-guest-row">
-              <p className="vm-additional-guest-kicker">Guest {index + 2}</p>
-              <label className="vm-form-label" htmlFor={`guest-name-${index}`}>
-                Name
-              </label>
-              <input
-                id={`guest-name-${index}`}
-                className="vm-input-field"
-                value={guest.name}
-                onChange={(e) => updateGuest(index, "name", e.target.value)}
-                onBlur={(e) => updateGuest(index, "name", autocorrectPersonName(e.target.value))}
-                placeholder="Full name"
-                autoComplete="name"
-                autoCapitalize="words"
-              />
-              <label className="vm-form-label" htmlFor={`guest-mobile-${index}`}>
-                Mobile
-              </label>
-              <input
-                id={`guest-mobile-${index}`}
-                className="vm-input-field"
-                value={guest.mobile}
-                onChange={(e) => updateGuest(index, "mobile", e.target.value)}
-                placeholder="10-digit mobile"
-                inputMode="numeric"
-                autoComplete="tel"
-                autoCapitalize="none"
-              />
-            </div>
-          ))}
-        </div>
-
-        {error ? <p className="login-error vm-additional-guests-error">{error}</p> : null}
-
-        <div className="vm-confirm-modal-actions">
-          <button type="button" className="vm-confirm-act-btn is-primary" disabled={busy} onClick={handleSave}>
-            {busy ? "Saving…" : "Save guests"}
-          </button>
-          <button type="button" className="vm-confirm-act-btn is-secondary" disabled={busy} onClick={onClose}>
-            Cancel
-          </button>
-        </div>
+      <div className="ds-confirm-modal__body">
+        {draft.map((guest, index) => (
+          <div key={index} className="ds-form-field">
+            <span className="ds-form-field__label">Guest {index + 2}</span>
+            <label className="ds-form-field__label" htmlFor={`guest-name-${index}`}>
+              Name
+            </label>
+            <input
+              id={`guest-name-${index}`}
+              className="ds-input"
+              value={guest.name}
+              onChange={(e) => updateGuest(index, "name", e.target.value)}
+              onBlur={(e) => updateGuest(index, "name", autocorrectPersonName(e.target.value))}
+              placeholder="Full name"
+              autoComplete="name"
+              autoCapitalize="words"
+            />
+            <label className="ds-form-field__label" htmlFor={`guest-mobile-${index}`}>
+              Mobile
+            </label>
+            <input
+              id={`guest-mobile-${index}`}
+              className="ds-input"
+              value={guest.mobile}
+              onChange={(e) => updateGuest(index, "mobile", e.target.value)}
+              placeholder="10-digit mobile"
+              inputMode="numeric"
+              autoComplete="tel"
+              autoCapitalize="none"
+            />
+          </div>
+        ))}
       </div>
-    </div>
+
+      {error ? <p className="ds-auth-error">{error}</p> : null}
+
+      <div className="ds-confirm-modal__actions" style={{ marginTop: 14 }}>
+        <button type="button" className="ds-btn-primary" disabled={busy} onClick={handleSave}>
+          {busy ? "Saving…" : "Save guests"}
+        </button>
+        <button type="button" className="ds-btn-secondary" disabled={busy} onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </SheetModal>
   );
 }

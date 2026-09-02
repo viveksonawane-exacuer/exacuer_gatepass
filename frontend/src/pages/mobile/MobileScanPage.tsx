@@ -2,9 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { securityApi } from "@/api/vms";
 import { useAuth } from "@/context/AuthContext";
-import { extractError, initials } from "@/lib/format";
+import { extractError } from "@/lib/format";
 import { canPerformCheckout } from "@/lib/roles";
-import { BrandLogo } from "@/components/ui/BrandLogo";
+import { VisitorGatePassCard } from "@/components/pass/VisitorGatePassCard";
 import { usePageChrome } from "@/context/PageChromeContext";
 
 export function MobileScanPage() {
@@ -80,78 +80,68 @@ export function MobileScanPage() {
   const entryName = String(pass?.visitor_entry || token || "");
 
   return (
-    <section className="m-page ad-page">
-      <div className="ad-dash-top">
-        <h1 className="ad-title">Scan QR</h1>
-      </div>
-      <p className="m-sub">Validate a gate pass, then check in or check out at the desk.</p>
+    <section className="ds-desk-page">
+      <p className="ds-desk-page__intro">Validate a gate pass, then check in or check out at the desk.</p>
 
-      <form className="ad-form" onSubmit={(e) => void onScan(e)}>
-        <div className="ad-field">
-          <label>Pass token / QR</label>
-          <input
-            className="ad-input"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Pass no. or /vms/pass/…"
-            required
-          />
+      <form className="ds-form" style={{ padding: 0 }} onSubmit={(e) => void onScan(e)}>
+        <div className="ds-card ds-form-section">
+          <div className="ds-form-field ds-form-field--full">
+            <label className="ds-form-field__label">Pass token / QR</label>
+            <input
+              className="ds-input"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Pass no. or /vms/pass/…"
+              required
+            />
+          </div>
+          <div className="ds-form-field ds-form-field--full">
+            <label className="ds-form-field__label">Checkout remarks</label>
+            <input
+              className="ds-input"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Optional"
+            />
+          </div>
+          <button type="submit" className="ds-btn-primary" disabled={busy}>
+            {busy ? "Scanning…" : "Validate QR"}
+          </button>
         </div>
-        <div className="ad-field">
-          <label>Checkout remarks</label>
-          <input
-            className="ad-input"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            placeholder="Optional"
-          />
-        </div>
-        <button type="submit" className="ad-btn" disabled={busy}>
-          {busy ? "Scanning…" : "Validate QR"}
-        </button>
       </form>
 
-      {message ? <p className="login-msg">{message}</p> : null}
-      {error ? <p className="login-error">{error}</p> : null}
+      {message ? <p className="ds-auth-msg">{message}</p> : null}
+      {error ? <p className="ds-auth-error">{error}</p> : null}
 
       {pass ? (
-        <div className="ad-pass">
-          <BrandLogo variant="on-dark" className="ad-pass-logo" />
-          <div className="ad-pass-name">{String(pass.full_name || "Visitor")}</div>
-          <div className="ad-pass-sub">
-            {[pass.visitor_company, pass.status].filter(Boolean).map(String).join(" · ") || "Gate pass"}
-          </div>
-          <div className="ad-pass-meta-row">
-            <span>Meeting with</span>
-            <span>{String(pass.person_to_meet_name || pass.host_name || "—")}</span>
-          </div>
-          <div className="ad-pass-meta-row">
-            <span>Floor</span>
-            <span>{String(pass.floor || "—")}</span>
-          </div>
-          <div className="ad-pass-meta-row">
-            <span>Pass no.</span>
-            <span>{entryName || "—"}</span>
-          </div>
-          <div className="ad-pass-who">
-            <div className="ad-avatar on-dark">{initials(String(pass.full_name || "V"))}</div>
-          </div>
-          <div className="ad-pass-foot">
-            <button type="button" className="ad-pass-btn" disabled={busy} onClick={() => void checkIn()}>
+        <>
+          <VisitorGatePassCard
+            passCode={entryName || "—"}
+            visitorName={String(pass.full_name || "Visitor")}
+            company={String(pass.company || "Exacuer Global")}
+            visitorCompany={String(pass.visitor_company || "—")}
+            hostName={String(pass.person_to_meet_name || pass.host_name || "—")}
+            floor={String(pass.floor || "—")}
+            status={String(pass.status || "Approved")}
+            checkInLocation="Main Gate"
+            hideActions
+          />
+          <div className="ds-gatepass-actions">
+            <button type="button" className="ds-gatepass-action-btn is-primary" disabled={busy} onClick={() => void checkIn()}>
               Check in
             </button>
             {showCheckout ? (
-              <button type="button" className="ad-pass-btn solid" disabled={busy} onClick={() => void checkOut()}>
+              <button type="button" className="ds-gatepass-action-btn" disabled={busy} onClick={() => void checkOut()}>
                 Check out
               </button>
             ) : null}
           </div>
           {entryName ? (
-            <Link className="ad-link" style={{ marginTop: 10, color: "var(--vms-pass-meta)" }} to={`/pass/${encodeURIComponent(entryName)}`}>
-              Open full pass
+            <Link className="ds-drilldown-btn" to={`/pass/${encodeURIComponent(entryName)}`}>
+              Open full pass ›
             </Link>
           ) : null}
-        </div>
+        </>
       ) : null}
     </section>
   );

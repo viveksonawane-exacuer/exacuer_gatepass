@@ -13,19 +13,19 @@ export function MobileAccessDeniedPage() {
   }
 
   return (
-    <div className="vm-auth-page">
-      <div className="vm-auth-mobile-frame">
-        <main className="vm-auth-body" style={{ justifyContent: "center", gap: "1.25rem" }}>
+    <div className="ds-auth-page">
+      <div className="ds-auth-frame">
+        <div className="ds-auth-intro">
           <BrandLogo variant="full" className="welcome-wordmark" />
-          <h1 className="vm-auth-title">Access restricted</h1>
-          <p className="vm-auth-subtitle" style={{ maxWidth: 320, margin: "0 auto" }}>
+          <h1 className="ds-auth-title">Access restricted</h1>
+          <p className="ds-auth-subtitle">
             {user?.full_name || user?.user || "This account"} does not have Visitor Management access.
             Ask an administrator to grant Visitor Entry permissions in Role Permission Manager.
           </p>
-          <button type="button" className="vm-btn-primary vm-auth-submit" onClick={() => void handleSignOut()}>
-            Sign out
-          </button>
-        </main>
+        </div>
+        <button type="button" className="ds-btn-primary ds-auth-submit" onClick={() => void handleSignOut()}>
+          Sign out
+        </button>
       </div>
     </div>
   );

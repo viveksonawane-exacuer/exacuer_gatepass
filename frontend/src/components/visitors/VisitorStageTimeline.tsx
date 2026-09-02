@@ -5,7 +5,6 @@ import { translateVisitStage } from "@/i18n/uiChrome";
 type VisitorStageTimelineProps = {
   visitor: VisitStageTimestamps;
   compact?: boolean;
-  /** When true, only stages with a timestamp are shown (minimal card layout). */
   filledOnly?: boolean;
   className?: string;
 };
@@ -23,15 +22,13 @@ export function VisitorStageTimeline({
 
   return (
     <div
-      className={`vm-visit-stage-timeline${compact ? " is-compact" : ""}${filledOnly ? " is-filled-only" : ""} ${className}`.trim()}
+      className={`ds-visit-stage-timeline${compact ? " is-compact" : ""} ${className}`.trim()}
     >
       {stages.map((stage) => (
-        <div key={stage.key} className="vm-visit-stage-row is-done">
-          <span className="vm-visit-stage-label">
-            {translateVisitStage(lang, stage.key, stage.label)}
-          </span>
-          <span className="vm-visit-stage-time">{formatStageTimestamp(stage.at, compact, lang)}</span>
-        </div>
+        <span key={stage.key} className="ds-visit-stage-chip">
+          <strong>{translateVisitStage(lang, stage.key, stage.label)}</strong>
+          {formatStageTimestamp(stage.at, compact, lang)}
+        </span>
       ))}
     </div>
   );

@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/WaterDropRangeToggle";
 import { LiveVisitorsCalendarButton } from "@/components/ui/LiveVisitorsCalendarButton";
 import { VisitorListRowCard } from "@/components/visitors/VisitorListRowCard";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -167,11 +169,11 @@ export function MobileHistoryPage() {
   }
 
   return (
-    <div className="vm-home-page vm-visitors-page vm-history-page">
-      <header className="vm-live-visitors-head">
-        <div className="vm-live-visitors-title-row">
-          <h1 className="vm-live-visitors-title">{ut(lang, "history")}</h1>
-          <div className="vm-live-visitors-controls">
+    <div className="ds-page ds-page--visitors vm-history-page">
+      <header className="ds-page-header ds-animate-in">
+        <div className="ds-page-header__row">
+          <h1 className="ds-page-header__title">{ut(lang, "history")}</h1>
+          <div className="ds-page-header__controls">
             <WaterDropRangeToggle value={rangeMode} onChange={setRangeMode} lang={lang} />
             <LiveVisitorsCalendarButton
               value={selectedDateTime}
@@ -184,39 +186,34 @@ export function MobileHistoryPage() {
 
       <SimpleStatusFilter options={filterOptions} value={tab} onChange={setTab} pinAllFilter />
 
-      <div className="vm-visitors-search">
-        <input
-          className="vm-input-field vm-visitors-search-input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={ut(lang, "search_visitor_or_host")}
-          aria-label={ut(lang, "search_visitor_or_host")}
-        />
-        <span className="vm-search-icon" aria-hidden>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </span>
-      </div>
+      <SearchBar
+        value={query}
+        onChange={setQuery}
+        placeholder={ut(lang, "search_visitor_or_host")}
+        aria-label={ut(lang, "search_visitor_or_host")}
+      />
 
       {error ? (
-        <p className="login-error" style={{ textAlign: "center" }}>
+        <p className="login-error" style={{ textAlign: "center", margin: "0 1rem" }}>
           {error}
         </p>
       ) : null}
 
-      <div className="vm-overview-card vm-visitor-list-card vm-history-list-card">
+      <div className="ds-visitor-list ds-stagger">
         {loading ? (
-          <p className="vm-empty-hint">{ut(lang, "loading_visitors")}</p>
+          <>
+            <div className="ds-skeleton" style={{ height: 120, borderRadius: 24 }} />
+            <div className="ds-skeleton" style={{ height: 120, borderRadius: 24 }} />
+          </>
         ) : displayList.length === 0 ? (
-          <p className="vm-empty-hint">No history yet.</p>
+          <div className="ds-card">
+            <EmptyState title="No history yet" description="Past visitor records will appear here." />
+          </div>
         ) : (
-          displayList.map((item, index) => (
+          displayList.map((item) => (
             <VisitorListRowCard
               key={item.name}
               item={item}
-              index={index}
               showEntryId
               timelineFilledOnly
               onOpen={(row) => navigate(`/visitor/${encodeURIComponent(row.name)}`)}

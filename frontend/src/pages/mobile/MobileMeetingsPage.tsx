@@ -4,9 +4,14 @@ import { visitorApi, type VisitorListRow } from "@/api/vms";
 import { extractError, formatTime, initials } from "@/lib/format";
 import { getCurrentStageTimestamp } from "@/lib/visitStages";
 import { VisitorStageTimeline } from "@/components/visitors/VisitorStageTimeline";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { EmptyState } from "@/components/design-system/EmptyState";
+import { StatusPill, resolveStatusPillVariant } from "@/components/design-system/StatusPill";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAuth } from "@/context/AuthContext";
 import { visitorScopeFilters } from "@/lib/roles";
+import { translateVisitorStatus } from "@/i18n/uiChrome";
+import { useAppLanguage } from "@/context/AppLanguageContext";
 
 function toInputDate(d: Date) {
   const y = d.getFullYear();
@@ -59,51 +64,11 @@ function rowDay(r: VisitorListRow) {
   return rowStamp(r).slice(0, 10);
 }
 
-function cardTheme(status?: string) {
-  const s = (status || "").toLowerCase();
-  if (s.includes("check") || s.includes("in")) {
-    return {
-      type: "green",
-      dot: "#16a34a",
-      bg: "#f0fdf4",
-      border: "#dcfce7",
-      pillBg: "#dcfce7",
-      pillText: "#16a34a",
-      avatarBg: "#dcfce7",
-      avatarText: "#16a34a",
-      label: "✓ CHECKED IN",
-    };
-  }
-  if (s.includes("pending") || s.includes("await")) {
-    return {
-      type: "orange",
-      dot: "#f97316",
-      bg: "#fff7ed",
-      border: "#ffedd5",
-      pillBg: "#ffedd5",
-      pillText: "#ea580c",
-      avatarBg: "#ffedd5",
-      avatarText: "#ea580c",
-      label: "🕒 PENDING APPROVAL",
-    };
-  }
-  return {
-    type: "blue",
-    dot: "#2563eb",
-    bg: "#eff6ff",
-    border: "#dbeafe",
-    pillBg: "#dbeafe",
-    pillText: "#2563eb",
-    avatarBg: "#dbeafe",
-    avatarText: "#2563eb",
-    label: "✓ APPROVED",
-  };
-}
-
 export function MobileMeetingsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { lang } = useAppLanguage();
 
   usePageChrome({
     title: "Meetings",
@@ -129,7 +94,6 @@ export function MobileMeetingsPage() {
     if (paramDate) setSelectedDate(paramDate);
   }, [paramDate]);
 
-  // 7-day strip around selectedDate
   const week = useMemo(() => {
     const start = addDays(selectedDate, -3);
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -174,38 +138,23 @@ export function MobileMeetingsPage() {
   }, [rows, selectedDate, query, filterStatus, today]);
 
   return (
-    <div className="vm-home-page vm-schedule-redesign-page">
-      {/* Sticky Header Section */}
-      <div className="vm-sched-header-wrap">
-        <header className="vm-sched-top-nav">
-          <button
-            type="button"
-            className="vm-sched-back-btn"
-            onClick={() => navigate(-1)}
-            aria-label="Back"
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
-
-          <div className="vm-sched-title-block">
-            <h1 className="vm-sched-main-title">Today&apos;s Schedule</h1>
-            <span className="vm-sched-sub-date">{headerDateSub(selectedDate)}</span>
+    <div className="ds-meetings-page">
+      <div className="ds-meetings-sticky">
+        <header className="ds-meetings-head">
+          <div className="ds-meetings-head__copy">
+            <h1 className="ds-meetings-head__title">Today&apos;s Schedule</h1>
+            <span className="ds-meetings-head__sub">{headerDateSub(selectedDate)}</span>
           </div>
 
-          <label className="vm-sched-month-pill">
+          <label className="ds-meetings-month-pill">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
             <span>{monthYearLabel(selectedDate)}</span>
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="m6 9 6 6 6-6" />
-            </svg>
             <input
               type="month"
-              className="vm-sched-month-picker"
+              className="ds-meetings-month-input"
               value={selectedDate.slice(0, 7)}
               onChange={(e) => {
                 if (e.target.value) {
@@ -216,45 +165,24 @@ export function MobileMeetingsPage() {
           </label>
         </header>
 
-        {/* Search & Filter Bar */}
-        <div className="vm-sched-search-row">
-          <div className="vm-sched-search-box">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#94a3b8" strokeWidth="2" aria-hidden>
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input
-              className="vm-sched-search-input"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search schedule..."
-              aria-label="Search schedule"
-            />
-            {query ? (
-              <button type="button" className="vm-sched-clear-btn" onClick={() => setQuery("")}>
-                ✕
-              </button>
-            ) : null}
-          </div>
-
+        <div className="ds-meetings-toolbar">
+          <SearchBar value={query} onChange={setQuery} placeholder="Search schedule..." aria-label="Search schedule" />
           <button
             type="button"
-            className={`vm-sched-filter-btn${filterStatus !== "all" ? " is-active" : ""}`}
+            className={`ds-sort-btn${filterStatus !== "all" ? " is-active" : ""}`}
             onClick={() => setShowFilter((v) => !v)}
             aria-label="Filter schedule"
-            title="Filter by status"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
           </button>
         </div>
 
-        {/* Filter Popup Menu */}
         {showFilter ? (
-          <div className="vm-sched-filter-dropdown">
-            <span className="label">Filter by Status:</span>
-            <div className="chips">
+          <div className="ds-meetings-filter-menu">
+            <span className="ds-meetings-filter-menu__label">Filter by status</span>
+            <div className="ds-meetings-filter-chips">
               {[
                 { code: "all", label: "All" },
                 { code: "pending", label: "Pending" },
@@ -264,7 +192,7 @@ export function MobileMeetingsPage() {
                 <button
                   key={st.code}
                   type="button"
-                  className={`chip${filterStatus === st.code ? " is-active" : ""}`}
+                  className={`ds-filter-pill${filterStatus === st.code ? " is-active" : ""}`}
                   onClick={() => {
                     setFilterStatus(st.code);
                     setShowFilter(false);
@@ -277,8 +205,7 @@ export function MobileMeetingsPage() {
           </div>
         ) : null}
 
-        {/* Horizontal Date Ribbon Strip */}
-        <div className="vm-sched-date-ribbon" role="listbox" aria-label="Select day">
+        <div className="ds-meetings-date-ribbon" role="listbox" aria-label="Select day">
           {week.map((date) => {
             const active = date === selectedDate;
             return (
@@ -287,123 +214,84 @@ export function MobileMeetingsPage() {
                 type="button"
                 role="option"
                 aria-selected={active}
-                className={`vm-sched-date-chip${active ? " is-active" : ""}`}
+                className={`ds-meetings-date-chip${active ? " is-active" : ""}`}
                 onClick={() => setSelectedDate(date)}
               >
-                <span className="day-name">{weekdayShort(date)}</span>
-                <span className="day-num-circle">{dayNum(date)}</span>
-                {active ? <span className="active-indicator" /> : null}
+                <span className="ds-meetings-date-chip__day">{weekdayShort(date)}</span>
+                <span className="ds-meetings-date-chip__num">{dayNum(date)}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Main Schedule Content Section */}
-      <main className="vm-sched-body">
-        {/* Schedule Summary Banner */}
-        <div className="vm-sched-summary-banner">
-          <h2 className="vm-sched-summary-title">
+      <main className="ds-meetings-body">
+        <div className="ds-meetings-summary">
+          <h2 className="ds-meetings-summary__title">
             Schedule for <span>{fullDateLabel(selectedDate)}</span>
           </h2>
-          <div className="vm-sched-count-pill">
-            <span className="count">{String(dayMeetings.length).padStart(2, "0")}</span>
-            <span className="label">Total Entries</span>
+          <div className="ds-meetings-count">
+            <strong>{String(dayMeetings.length).padStart(2, "0")}</strong>
+            <span>Entries</span>
           </div>
         </div>
 
-        {error ? <p className="login-error" style={{ textAlign: "center", marginTop: "1rem" }}>{error}</p> : null}
-        {loading ? <p className="vm-empty-hint" style={{ marginTop: "1.5rem" }}>Loading schedule…</p> : null}
+        {error ? <p className="ds-auth-error">{error}</p> : null}
+        {loading ? <EmptyState title="Loading schedule…" /> : null}
 
         {!loading && dayMeetings.length === 0 ? (
-          <div className="vm-sched-empty-card">
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#94a3b8" strokeWidth="1.5">
-              <rect x="3" y="4" width="18" height="18" rx="3" />
-              <path d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
-            <strong>No Schedule Found</strong>
-            <p>No visitor entries recorded for {selectedDate}</p>
-          </div>
+          <EmptyState
+            title="No schedule found"
+            description={`No visitor entries recorded for ${selectedDate}`}
+          />
         ) : null}
 
-        {/* Timeline Schedule Cards List */}
-        <div className="vm-sched-timeline-list">
+        <div className="ds-meetings-list">
           {dayMeetings.map((item) => {
-            const time = formatTime(rowStamp(item)) || "10:30 AM";
+            const time = formatTime(rowStamp(item)) || "—";
             const visitorName = item.full_name || item.name;
             const hostName = item.person_to_meet_name || "Administrator";
             const purpose = item.visit_purpose_type || "Visit";
-            const theme = cardTheme(item.status);
+            const statusLabel = translateVisitorStatus(lang, item.status, { short: true });
 
             return (
-              <div key={item.name} className="vm-sched-timeline-item">
-                {/* Left Timeline Bar with Colored Dot */}
-                <div className="vm-sched-time-col">
-                  <span className="time-text">{time}</span>
-                  <span className="dot-node" style={{ backgroundColor: theme.dot }} />
-                  <span className="timeline-line" />
+              <div key={item.name} className="ds-schedule-item">
+                <div className="ds-schedule-item__time-col">
+                  <span className="ds-schedule-item__time">{time}</span>
+                  <span className="ds-schedule-item__dot" />
+                  <span className="ds-schedule-item__line" />
                 </div>
 
-                {/* Timeline Card */}
                 <article
-                  className={`vm-sched-card theme-${theme.type}`}
-                  style={{
-                    backgroundColor: theme.bg,
-                    borderColor: theme.border,
-                  }}
+                  className="ds-schedule-card"
                   onClick={() => navigate(`/visitor/${encodeURIComponent(item.name)}`)}
                 >
-                  {/* Top Row: Visitor Info + Time Pill */}
-                  <div className="vm-sched-card-top">
-                    <div className="visitor-identity">
-                      <div
-                        className="avatar-circle"
-                        style={{ backgroundColor: theme.avatarBg, color: theme.avatarText }}
-                      >
-                        {initials(visitorName)}
-                      </div>
-                      <strong className="visitor-name">{visitorName}</strong>
+                  <div className="ds-schedule-card__top">
+                    <div className="ds-schedule-card__identity">
+                      <div className="ds-schedule-card__avatar">{initials(visitorName)}</div>
+                      <strong className="ds-schedule-card__name">{visitorName}</strong>
                     </div>
-
-                    <span
-                      className="time-badge-pill"
-                      style={{ backgroundColor: theme.pillBg, color: theme.pillText }}
-                    >
-                      {time}
-                    </span>
+                    <StatusPill label={time} variant="info" showDot={false} />
                   </div>
 
-                  {/* Metadata Rows */}
-                  <div className="vm-sched-card-meta">
-                    <div className="meta-line">
-                      <span className="lbl">Host:</span>
-                      <span className="val">{hostName}</span>
+                  <div className="ds-schedule-card__meta">
+                    <div className="ds-schedule-card__meta-row">
+                      <span>Host</span>
+                      <strong>{hostName}</strong>
                     </div>
-                    <div className="meta-line">
-                      <span className="lbl">Purpose:</span>
-                      <span className="val">{purpose}</span>
+                    <div className="ds-schedule-card__meta-row">
+                      <span>Purpose</span>
+                      <strong>{purpose}</strong>
                     </div>
                   </div>
 
-                  <VisitorStageTimeline visitor={item} compact className="vm-sched-stage-timeline" />
+                  <VisitorStageTimeline visitor={item} compact />
 
-                  {/* Bottom Row: Overlapped Avatars + Status Pill */}
-                  <div className="vm-sched-card-foot">
-                    <div className="avatar-stack">
-                      <span className="av-circle visitor-av" style={{ backgroundColor: theme.avatarBg, color: theme.avatarText }}>
-                        {initials(visitorName)}
-                      </span>
-                      <span className="av-circle host-av">
-                        {initials(hostName)}
-                      </span>
+                  <div className="ds-schedule-card__foot">
+                    <div className="ds-schedule-card__avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
+                      {initials(hostName)}
                     </div>
-
-                    <span
-                      className="status-pill-badge"
-                      style={{ backgroundColor: theme.pillBg, color: theme.pillText }}
-                    >
-                      {theme.label}
-                    </span>
+                    <StatusPill label={statusLabel} variant={resolveStatusPillVariant(item.status)} />
                   </div>
                 </article>
               </div>

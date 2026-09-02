@@ -9,6 +9,8 @@ import {
 } from "@/api/vms";
 import { ErpNextToast, type ErpToastData } from "@/components/common/ErpNextToast";
 import { PendingDecisionCard } from "@/components/approvals/PendingDecisionCard";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import { ApprovalFloorModal } from "@/components/approvals/ApprovalFloorModal";
 import { ApprovalRejectModal } from "@/components/approvals/ApprovalRejectModal";
 import { ApprovalTransferModal } from "@/components/approvals/ApprovalTransferModal";
@@ -455,72 +457,60 @@ export function MobileApprovalsPage() {
   const viewOnlyAll = tab === "all";
 
   return (
-    <div className="vm-home-page vm-approvals-page">
+    <div className="ds-page ds-page--approvals vm-approvals-page">
       <ErpNextToast toast={toast} onClose={() => setToast(null)} />
 
-      <main className="vm-main-body vm-approvals-stack vm-page-content-start">
-        <div className="vm-meetings-search" style={{ margin: 0 }}>
-          <span className="vm-search-icon" aria-hidden>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-          </span>
-          <input
-            className="vm-input-field vm-meetings-search-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={ut(lang, "search_visitor_host_company")}
-            aria-label={ut(lang, "search_visitor_host_company")}
-          />
-        </div>
+      <main className="vm-approvals-stack ds-stagger">
+        <SearchBar
+          value={query}
+          onChange={setQuery}
+          placeholder={ut(lang, "search_visitor_host_company")}
+          aria-label={ut(lang, "search_visitor_host_company")}
+        />
 
-        <div className="vm-reports-tabs" role="tablist" aria-label="Visitor status">
+        <div className="ds-segmented" role="tablist" aria-label="Visitor status">
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               role="tab"
               aria-selected={tab === t.id}
-              className={`vm-reports-tab${tab === t.id ? " is-active" : ""}`}
+              className={`ds-segmented__tab${tab === t.id ? " is-active" : ""}`}
               onClick={() => setApprovalsTab(t.id)}
             >
               {ut(lang, t.labelKey)}
-              <span className="vm-reports-tab-count">{formatCount(counts[t.id], lang)}</span>
+              <span className="ds-segmented__count">{formatCount(counts[t.id], lang)}</span>
             </button>
           ))}
         </div>
 
-        <div className="vm-approvals-filter-bar">
-          <div className="vm-approvals-filter-pills">
+        <div className="vm-approvals-filter-row">
+          <div className="vm-approvals-date-pills">
             <button
               type="button"
-              className={`vm-filter-pill${dateMode === "today" ? " is-active" : ""}`}
+              className={`ds-filter-pill${dateMode === "today" ? " is-active" : ""}`}
               onClick={() => setDateMode("today")}
             >
               {ut(lang, "filter_today")}
             </button>
-
             <button
               type="button"
-              className={`vm-filter-pill${dateMode === "yesterday" ? " is-active" : ""}`}
+              className={`ds-filter-pill${dateMode === "yesterday" ? " is-active" : ""}`}
               onClick={() => setDateMode("yesterday")}
             >
               {ut(lang, "filter_yesterday")}
             </button>
-
             <button
               type="button"
-              className={`vm-filter-pill${dateMode === "week" ? " is-active" : ""}`}
+              className={`ds-filter-pill${dateMode === "week" ? " is-active" : ""}`}
               onClick={() => setDateMode("week")}
             >
               {ut(lang, "filter_this_week")}
             </button>
-
             {dateMode !== "week" || query ? (
               <button
                 type="button"
-                className="vm-filter-clear-btn"
+                className="ds-filter-clear"
                 onClick={() => {
                   setDateMode("week");
                   setQuery("");
@@ -530,15 +520,15 @@ export function MobileApprovalsPage() {
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
-                <span>{ut(lang, "filter_clear")}</span>
+                {ut(lang, "filter_clear")}
               </button>
             ) : null}
           </div>
 
-          <div className="vm-approvals-sort" ref={sortRef}>
+          <div className="vm-approvals-sort-wrap" ref={sortRef}>
             <button
               type="button"
-              className={`vm-sort-icon-btn${sortOpen || sortMode === "asc" ? " is-active" : ""}`}
+              className={`ds-sort-btn${sortOpen || sortMode === "asc" ? " is-active" : ""}`}
               onClick={() => setSortOpen((open) => !open)}
               aria-haspopup="menu"
               aria-expanded={sortOpen}
@@ -555,33 +545,33 @@ export function MobileApprovalsPage() {
             </button>
 
             {sortOpen ? (
-              <div className="vm-approvals-sort-menu" role="menu" aria-label={ut(lang, "sort_label")}>
-                <p className="vm-approvals-sort-heading">{ut(lang, "sort_by_created")}</p>
+              <div className="ds-sort-menu" role="menu" aria-label={ut(lang, "sort_label")}>
+                <p className="ds-sort-menu__heading">{ut(lang, "sort_by_created")}</p>
                 <button
                   type="button"
                   role="menuitemradio"
                   aria-checked={sortMode === "desc"}
-                  className={`vm-approvals-sort-option${sortMode === "desc" ? " is-active" : ""}`}
+                  className={`ds-sort-option${sortMode === "desc" ? " is-active" : ""}`}
                   onClick={() => {
                     setSortMode("desc");
                     setSortOpen(false);
                   }}
                 >
                   <span>{ut(lang, "sort_created_newest")}</span>
-                  <span className="vm-approvals-sort-dir">{ut(lang, "sort_dir_desc")}</span>
+                  <span className="ds-sort-option__dir">{ut(lang, "sort_dir_desc")}</span>
                 </button>
                 <button
                   type="button"
                   role="menuitemradio"
                   aria-checked={sortMode === "asc"}
-                  className={`vm-approvals-sort-option${sortMode === "asc" ? " is-active" : ""}`}
+                  className={`ds-sort-option${sortMode === "asc" ? " is-active" : ""}`}
                   onClick={() => {
                     setSortMode("asc");
                     setSortOpen(false);
                   }}
                 >
                   <span>{ut(lang, "sort_created_oldest")}</span>
-                  <span className="vm-approvals-sort-dir">{ut(lang, "sort_dir_asc")}</span>
+                  <span className="ds-sort-option__dir">{ut(lang, "sort_dir_asc")}</span>
                 </button>
               </div>
             ) : null}
@@ -589,19 +579,25 @@ export function MobileApprovalsPage() {
         </div>
 
         {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
-        {loading ? <p className="vm-empty-hint">{ut(lang, "loading")}</p> : null}
+        {loading ? (
+          <>
+            <div className="ds-skeleton" style={{ height: 140, borderRadius: 24 }} />
+            <div className="ds-skeleton" style={{ height: 140, borderRadius: 24 }} />
+          </>
+        ) : null}
 
         {!loading && filteredItems.length === 0 ? (
-          <div className="vm-overview-card vm-approvals-empty">
-            <strong>
-              {ut(lang, "no_tab_items", {
+          <div className="ds-card">
+            <EmptyState
+              title={ut(lang, "no_tab_items", {
                 label: ut(lang, TABS.find((t) => t.id === tab)?.labelKey || "tab_pending"),
               })}
-            </strong>
+              description="Try adjusting filters or search terms."
+            />
           </div>
         ) : null}
 
-        <div className="vm-decide-list">
+        <div className="vm-decide-list ds-stagger">
           {filteredItems.map((item) => (
             <PendingDecisionCard
               key={item.name}

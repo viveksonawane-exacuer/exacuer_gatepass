@@ -1,108 +1,113 @@
 /**
- * Exacuer Global VMS tokens — Modern Glassmorphic iOS Aesthetic
- * Vibrant mesh gradients, frosted glass surfaces, soft ambient glows, rounded pills
+ * Exacuer Global VMS — Premium SaaS design tokens
+ * Calm surfaces, soft shadows, Exacuer brand accent, mobile-first spacing
  */
 :root {
   /* Typography */
-  --vms-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --vms-font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
 
-  /* Brand & Core Gradients */
-  --vms-primary: #6366f1;
-  --vms-primary-hover: #4f46e5;
-  --vms-primary-soft: #eef2ff;
-  --vms-secondary: #8b5cf6;
-  --vms-secondary-soft: #f5f3ff;
-  --vms-accent-pink: #ec4899;
-  --vms-accent-cyan: #06b6d4;
-  --vms-accent-orange: #f97316;
-  --vms-accent-amber: #f59e0b;
-
-  /* Mesh Gradients */
-  --vms-gradient-mesh: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 38%, #d946ef 70%, #06b6d4 100%);
-  --vms-gradient-ambient: linear-gradient(180deg, rgba(99, 102, 241, 0.16) 0%, rgba(217, 70, 239, 0.08) 35%, rgba(248, 250, 252, 0) 100%);
-  --vms-gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-  --vms-gradient-ocean: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0284c7 100%);
-  --vms-gradient-sunset: linear-gradient(135deg, #1e293b 0%, #ea580c 55%, #f43f5e 100%);
-  --vms-gradient-emerald: linear-gradient(135deg, #064e3b 0%, #059669 60%, #10b981 100%);
-  --vms-gradient-ai-banner: linear-gradient(90deg, #1e1b4b 0%, #4338ca 40%, #ec4899 80%, #f97316 100%);
-  --vms-gradient-ai-orb: radial-gradient(circle at 35% 30%, #38bdf8 0%, #818cf8 35%, #c084fc 65%, #f43f5e 100%);
-  --vms-gradient-border: linear-gradient(90deg, #6366f1, #d946ef, #f97316);
-
-  /* Status Tokens */
-  --vms-success: #10b981;
-  --vms-success-soft: #ecfdf5;
-  --vms-danger: #ef4444;
-  --vms-danger-soft: #fef2f2;
-  --vms-warning: #f59e0b;
-  --vms-warning-soft: #fffbeb;
-  --vms-info: #3b82f6;
-  --vms-info-soft: #eff6ff;
-  --vms-meeting: #6366f1;
-
-  /* Surfaces & Glassmorphism */
-  --vms-bg: #ffffff;
-  --vms-surface: #ffffff;
-  --vms-surface-2: #f1f5f9;
-  --vms-glass-surface: rgba(255, 255, 255, 0.88);
-  --vms-glass-card: rgba(255, 255, 255, 0.94);
-  --vms-glass-border: rgba(255, 255, 255, 0.8);
-  --vms-glass-blur: blur(16px);
-  --vms-dock-bg: rgba(255, 255, 255, 0.86);
-
-  /* Text & Borders */
-  --vms-text: #0f172a;
-  --vms-navy: #0f172a;
+  /* Brand */
+  --vms-primary: #0a3d91;
+  --vms-primary-hover: #0f4fb5;
+  --vms-primary-soft: #e8eef8;
+  --vms-navy: #14213d;
   --vms-navy-muted: #334155;
-  --vms-muted: #64748b;
-  --vms-placeholder: #94a3b8;
-  --vms-border: #e2e8f0;
-  --vms-border-light: rgba(226, 232, 240, 0.7);
-  --vms-divider: #f1f5f9;
-  --vms-input-border: #e2e8f0;
 
-  /* Pass & Badges */
-  --vms-pass-meta: #64748b;
+  /* Status */
+  --vms-success: #16a34a;
+  --vms-success-soft: #ecfdf3;
+  --vms-danger: #dc2626;
+  --vms-danger-soft: #fef2f2;
+  --vms-warning: #d97706;
+  --vms-warning-soft: #fffbeb;
+  --vms-info: #2563eb;
+  --vms-info-soft: #eff6ff;
+  --vms-meeting: #4f46e5;
+  --vms-meeting-soft: #eef2ff;
+  --vms-checked-in: #2563eb;
+  --vms-checked-in-soft: #eff6ff;
+  --vms-out: #64748b;
+  --vms-out-soft: #f1f5f9;
+
+  /* Surfaces */
+  --vms-bg: #f7f7f8;
+  --vms-surface: #ffffff;
+  --vms-surface-2: #f1f3f5;
+  --vms-dock-bg: #111111;
+  --vms-dock-active: #ffffff;
+  --vms-dock-fab-bg: var(--vms-primary);
+  --vms-dock-fab-hover: var(--vms-primary-hover);
+  --vms-dock-indicator: var(--vms-primary);
+  --vms-dock-active-icon: var(--vms-primary);
+
+  /* Text */
+  --vms-text: #111111;
+  --vms-muted: #6b6b6b;
+  --vms-placeholder: #9a9a9a;
+  --vms-pass-meta: #6b6b6b;
+
+  /* Borders & dividers */
+  --vms-border: #eaeaea;
+  --vms-border-light: #f0f0f0;
+  --vms-divider: #f0f0f0;
+  --vms-input-border: #eaeaea;
+
+  /* Gate pass */
   --vms-pass-seal: #ffffff;
-  --vms-pass-accent: #6366f1;
+  --vms-pass-accent: #0a3d91;
 
-  /* Spacing & Radii */
-  --vms-space-section: 20px;
-  --vms-space-card: 14px;
-  --vms-space-pad: 14px;
-  --vms-page-gutter: 1rem;
+  /* Spacing */
+  --vms-space-section: 24px;
+  --vms-space-card: 20px;
+  --vms-space-pad: 16px;
+  --vms-page-gutter: 0.5rem;
 
+  /* Radii */
   --vms-radius: 20px;
-  --vms-radius-sm: 12px;
-  --vms-radius-md: 16px;
+  --vms-radius-sm: 14px;
+  --vms-radius-md: 18px;
   --vms-radius-lg: 24px;
   --vms-radius-xl: 28px;
   --vms-radius-pill: 9999px;
 
-  --vms-btn-height: 48px;
+  /* Controls */
+  --vms-btn-height: 52px;
   --vms-input-height: 50px;
 
-  /* Elevation & Glow Shadows */
-  --vms-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
-  --vms-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
-  --vms-shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.03);
-  --vms-shadow-glow: 0 8px 24px rgba(99, 102, 241, 0.35);
-  --vms-shadow-ai-btn: 0 6px 20px rgba(217, 70, 239, 0.4);
-  --vms-shadow-dock: 0 12px 36px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04);
-  --vms-shadow-btn: 0 8px 20px rgba(99, 102, 241, 0.25);
-  --vms-focus-ring: 0 0 0 4px rgba(99, 102, 241, 0.18);
+  /* Shadows */
+  --vms-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.03);
+  --vms-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --vms-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --vms-shadow-float: 0 8px 30px rgba(0, 0, 0, 0.1);
+  --vms-shadow-btn: 0 4px 14px rgba(10, 61, 145, 0.22);
+  --vms-focus-ring: 0 0 0 3px rgba(10, 61, 145, 0.18);
   --vms-motion: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-motion-fast: 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-motion-enter: 340ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-motion-page: 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-motion-modal: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-motion-sheet: 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-duration-fast: 160ms;
+  --vms-duration-page: 320ms;
+  --vms-duration-enter: 340ms;
+  --vms-duration-modal: 280ms;
+  --vms-duration-sheet: 360ms;
+  --vms-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --vms-ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --vms-stagger-step: 45ms;
 
-  /* Typography */
-  --vms-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --vms-title-page: 28px;
-  --vms-title-section: 18px;
+  /* Typography scale */
+  --vms-title-page: 26px;
+  --vms-title-section: 19px;
   --vms-title-card: 16px;
-  --vms-title-lg: 30px;
+  --vms-title-lg: 32px;
+  --vms-stat-lg: 34px;
   --vms-label: 12px;
   --vms-body: 14px;
   --vms-caption: 12px;
   --vms-badge: 11px;
 
+  /* Legacy aliases */
   --bg: var(--vms-bg);
   --surface: var(--vms-surface);
   --text: var(--vms-text);
@@ -110,4 +115,3 @@
   --accent: var(--vms-primary);
   --border: var(--vms-border);
 }
-

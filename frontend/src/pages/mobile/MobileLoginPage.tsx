@@ -64,72 +64,66 @@ export function MobileLoginPage() {
   }
 
   return (
-    <div className="vm-auth-page">
-      <div className="vm-auth-mobile-frame">
-        <header className="vm-auth-header">
-          <span className="vm-auth-header-spacer" aria-hidden />
-          <span className="vm-auth-pill">ERPNext Sign In</span>
-          <span className="vm-auth-header-spacer" aria-hidden />
-        </header>
+    <div className="ds-auth-page">
+      <div className="ds-auth-frame">
+        <span className="ds-auth-pill">ERPNext Sign In</span>
 
-        <main className="vm-auth-body">
-          <div className="vm-auth-intro">
-            <BrandLogo variant="full" className="welcome-wordmark" />
-            <h1 className="vm-auth-title">Sign In to Exacuer Global</h1>
-            <p className="vm-auth-subtitle">Use your ERPNext username or email and password</p>
+        <div className="ds-auth-intro">
+          <BrandLogo variant="full" className="welcome-wordmark" />
+          <h1 className="ds-auth-title">Sign In to Exacuer Global</h1>
+          <p className="ds-auth-subtitle">Use your ERPNext username or email and password</p>
+        </div>
+
+        <form className="ds-auth-form" onSubmit={onPasswordLogin}>
+          <div className="ds-auth-field">
+            <label className="ds-auth-label" htmlFor="login-username">
+              ERPNext Username / Email *
+            </label>
+            <input
+              id="login-username"
+              type="text"
+              className="ds-input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoCapitalize="none"
+              autoComplete="username"
+            />
           </div>
 
-          <form className="vm-auth-form" onSubmit={onPasswordLogin}>
-            <div className="vm-form-group">
-              <label className="vm-form-label" htmlFor="login-username">
-                ERPNext Username / Email *
-              </label>
+          <div className="ds-auth-field">
+            <label className="ds-auth-label" htmlFor="login-password">
+              Password *
+            </label>
+            <div className="ds-auth-password-wrap">
               <input
-                id="login-username"
-                type="text"
-                className="vm-input-field"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                className="ds-input"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                autoCapitalize="none"
-                autoComplete="username"
+                autoComplete="current-password"
               />
+              <button
+                type="button"
+                className="ds-auth-password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
             </div>
+          </div>
 
-            <div className="vm-form-group">
-              <label className="vm-form-label" htmlFor="login-password">
-                Password *
-              </label>
-              <div className="vm-auth-password-wrap">
-                <input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  className="vm-input-field"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="vm-auth-password-toggle"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
+          {error ? <p className="ds-auth-error">{error}</p> : null}
+          {message ? <p className="ds-auth-msg">{message}</p> : null}
 
-            {error ? <p className="login-error">{error}</p> : null}
-            {message ? <p className="login-msg">{message}</p> : null}
-
-            <button type="submit" className="vm-btn-primary vm-auth-submit" disabled={busy}>
-              {busy ? "Signing in…" : "Sign In with ERPNext"}
-            </button>
-          </form>
-        </main>
+          <button type="submit" className="ds-btn-primary ds-auth-submit" disabled={busy}>
+            {busy ? "Signing in…" : "Sign In with ERPNext"}
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 @import "./tokens.css";
+@import "./design-system.css";
 
 :root {
   font-family: var(--vms-font);
@@ -7153,11 +7154,11 @@ a {
 }
 
 .vm-form-surface {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 1.2rem 0.85rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .vm-form-surface--spaced {
@@ -15537,21 +15538,240 @@ button.vm-pending-redesign-val.is-link:hover {
   color: #ea580c;
 }
 
-.vm-host-ring-cta {
-  width: 100%;
-  min-height: 52px;
-  border: 0;
-  border-radius: 14px;
-  background: #0a2540;
-  color: #fff;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
+/* ── Professional Caller Alert Modal ── */
+.vm-caller-alert-card {
+  position: relative;
+  width: min(100%, 360px);
+  padding: 1.5rem 1.25rem 1.4rem;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  text-align: center;
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.35),
+    0 4px 16px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: vm-host-ring-card-in 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: pan-y;
+  user-select: none;
+  overflow: hidden;
+}
+
+.vm-caller-alert-handle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0.85rem;
   cursor: pointer;
 }
 
-.vm-host-ring-cta:active {
-  transform: scale(0.98);
+.vm-caller-alert-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.vm-caller-alert-hint {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.vm-caller-alert-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vm-caller-alert-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.vm-caller-avatar-stage {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 0.9rem;
+  display: grid;
+  place-items: center;
+}
+
+.vm-caller-pulse-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  animation: vmCallerPulse 2s ease-out infinite;
+}
+
+.vm-caller-pulse-ring--delay {
+  animation-delay: 1s;
+}
+
+@keyframes vmCallerPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.vm-caller-avatar-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  border: 3px solid #ffffff;
+}
+
+.vm-caller-avatar-initials {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.vm-caller-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.vm-caller-kicker-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.vm-caller-name {
+  margin: 0.45rem 0 0.3rem;
+  font-size: 1.45rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.vm-caller-message {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.4;
+  max-width: 290px;
+}
+
+.vm-caller-meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+}
+
+.vm-caller-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ea580c;
+}
+
+.vm-caller-meta-text {
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #c2410c;
+}
+
+/* Dual Calling Actions */
+.vm-caller-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.vm-caller-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px 8px;
+  border-radius: 16px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vm-caller-btn:active {
+  transform: scale(0.96);
+}
+
+.vm-caller-btn--decline {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #dc2626;
+}
+
+.vm-caller-btn--decline .vm-caller-btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.vm-caller-btn--accept {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  color: #16a34a;
+}
+
+.vm-caller-btn--accept .vm-caller-btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
 }
 
 .vm-notify-enable-banner {
@@ -22333,5 +22553,28 @@ textarea:focus,
   background: var(--vms-gradient-mesh, linear-gradient(135deg, #4f46e5 0%, #6366f1 38%, #818cf8 70%, #06b6d4 100%)) !important;
 }
 
+/* Floating dock shell — wins over legacy .vm-dock glass styles above */
+.vm-dock-shell .vm-dock {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+}
 
+.vm-dock-shell .vm-dock-inner {
+  background: var(--vms-dock-bg, #111111) !important;
+  border: none !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.vm-dock-shell .vm-dock-tab.is-active .vm-dock-tab-icon {
+  background: transparent !important;
+  color: var(--vms-dock-active-icon, var(--vms-primary)) !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
 

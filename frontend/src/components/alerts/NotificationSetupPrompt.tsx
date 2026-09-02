@@ -30,27 +30,34 @@ export function NotificationSetupPrompt({ variant, onAction }: Props) {
 
   if (variant === "popup") {
     return (
-      <button type="button" className="vm-profile-popup-setup" onClick={onSetup}>
-        <span className="vm-profile-popup-setup-icon" aria-hidden>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
+      <button type="button" className="ds-settings-alert-row" onClick={onSetup}>
+        <span className="ds-settings-row__left">
+          <span className="ds-settings-row__icon" aria-hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </span>
+          <span>
+            <strong className="ds-settings-row__label">{ut(lang, "setup_alerts")}</strong>
+            <span className="ds-confirm-modal__sub" style={{ display: "block", marginTop: 2 }}>
+              {denied ? ut(lang, "setup_alerts_denied") : ut(lang, "setup_alerts_hint")}
+            </span>
+          </span>
         </span>
-        <span className="vm-profile-popup-setup-copy">
-          <strong>{ut(lang, "setup_alerts")}</strong>
-          <span>{denied ? ut(lang, "setup_alerts_denied") : ut(lang, "setup_alerts_hint")}</span>
-        </span>
+        <span className="ds-settings-alert-row__badge">{ut(lang, "required")}</span>
       </button>
     );
   }
 
   return (
-    <button type="button" className="vm-settings-row vm-settings-row--setup" onClick={onSetup}>
-      <span className="vm-settings-row-label">{ut(lang, "setup_alerts")}</span>
-      <span className="vm-settings-row-trail">
-        <span className="vm-settings-row-badge">{ut(lang, "required")}</span>
-        <span aria-hidden>›</span>
+    <button type="button" className="ds-settings-alert-row" onClick={onSetup}>
+      <span className="ds-settings-row__label">{ut(lang, "setup_alerts")}</span>
+      <span className="ds-settings-row__trail">
+        <span className="ds-settings-alert-row__badge">{ut(lang, "required")}</span>
+        <span className="ds-settings-row__chevron" aria-hidden>
+          ›
+        </span>
       </span>
     </button>
   );

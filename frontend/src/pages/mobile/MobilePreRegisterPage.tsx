@@ -107,80 +107,85 @@ export function MobilePreRegisterPage() {
   }
 
   return (
-    <section className="m-page ad-page">
-      <div className="ad-dash-top">
-        <h1 className="ad-title">Pre-register visitor</h1>
-      </div>
-      <p className="m-sub">Create a pending entry before the guest arrives at the gate.</p>
+    <section className="ds-desk-page">
+      <p className="ds-desk-page__intro">Create a pending entry before the guest arrives at the gate.</p>
 
-      <form className="ad-form" onSubmit={(e) => void onSubmit(e)}>
-        <div className="ad-field">
-          <label>Full name</label>
-          <input
-            className="ad-input"
-            required
-            value={form.full_name}
-            onChange={(e) => setField("full_name", e.target.value)}
-            onBlur={(e) => setField("full_name", autocorrectPersonName(e.target.value))}
-            autoCapitalize="words"
-            placeholder="Ankit Sharma"
-          />
+      <form className="ds-form" style={{ padding: 0 }} onSubmit={(e) => void onSubmit(e)}>
+        <div className="ds-card ds-form-section">
+          <div className="ds-form-grid">
+            <div className="ds-form-field ds-form-field--full">
+              <label className="ds-form-field__label">Full name</label>
+              <input
+                className="ds-input"
+                required
+                value={form.full_name}
+                onChange={(e) => setField("full_name", e.target.value)}
+                onBlur={(e) => setField("full_name", autocorrectPersonName(e.target.value))}
+                autoCapitalize="words"
+                placeholder="Ankit Sharma"
+              />
+            </div>
+            <div className="ds-form-field">
+              <label className="ds-form-field__label">Mobile number</label>
+              <input
+                className="ds-input"
+                required
+                inputMode="tel"
+                value={form.mobile}
+                onChange={(e) => setField("mobile", e.target.value)}
+                autoCapitalize="none"
+                placeholder="9123456780"
+              />
+            </div>
+            <div className="ds-form-field">
+              <label className="ds-form-field__label">Visit date / note</label>
+              <input
+                className="ds-input"
+                value={form.visit_note}
+                onChange={(e) => setField("visit_note", e.target.value)}
+                onBlur={(e) => setField("visit_note", autocorrectFormText(e.target.value))}
+                autoCapitalize="sentences"
+                placeholder="24 Jul 2026"
+              />
+            </div>
+            <div className="ds-form-field ds-form-field--full">
+              <label className="ds-form-field__label">
+                Host <span className="ds-form-field__required">*</span>
+              </label>
+              <SearchSelect
+                value={form.person_to_meet}
+                options={hostOptions}
+                onChange={(val) => setField("person_to_meet", val)}
+                placeholder="Select"
+                searchPlaceholder="Search host"
+                loading={loading}
+                loadingText="Loading hosts…"
+                emptyText="No hosts found"
+                required
+                allowEmpty
+                aria-label="Host"
+              />
+            </div>
+            <div className="ds-form-field ds-form-field--full">
+              <label className="ds-form-field__label">Company</label>
+              <input
+                className="ds-input"
+                value={form.visitor_company}
+                onChange={(e) => setField("visitor_company", e.target.value)}
+                onBlur={(e) => setField("visitor_company", autocorrectFormText(e.target.value))}
+                autoCapitalize="words"
+                placeholder="Company"
+              />
+            </div>
+          </div>
+
+          {error ? <p className="ds-auth-error">{error}</p> : null}
+          {message ? <p className="ds-auth-msg">{message}</p> : null}
+
+          <button type="submit" className="ds-btn-primary ds-form-submit" disabled={busy}>
+            {busy ? "Saving…" : "Pre-register"}
+          </button>
         </div>
-        <div className="ad-field">
-          <label>Mobile number</label>
-          <input
-            className="ad-input"
-            required
-            inputMode="tel"
-            value={form.mobile}
-            onChange={(e) => setField("mobile", e.target.value)}
-            autoCapitalize="none"
-            placeholder="9123456780"
-          />
-        </div>
-        <div className="ad-field">
-          <label>Visit date / note</label>
-          <input
-            className="ad-input"
-            value={form.visit_note}
-            onChange={(e) => setField("visit_note", e.target.value)}
-            onBlur={(e) => setField("visit_note", autocorrectFormText(e.target.value))}
-            autoCapitalize="sentences"
-            placeholder="24 Jul 2026"
-          />
-        </div>
-        <div className="ad-field">
-          <label>Host *</label>
-          <SearchSelect
-            value={form.person_to_meet}
-            options={hostOptions}
-            onChange={(val) => setField("person_to_meet", val)}
-            placeholder="Select"
-            searchPlaceholder="Search host"
-            loading={loading}
-            loadingText="Loading hosts…"
-            emptyText="No hosts found"
-            required
-            allowEmpty
-            aria-label="Host"
-          />
-        </div>
-        <div className="ad-field">
-          <label>Company</label>
-          <input
-            className="ad-input"
-            value={form.visitor_company}
-            onChange={(e) => setField("visitor_company", e.target.value)}
-            onBlur={(e) => setField("visitor_company", autocorrectFormText(e.target.value))}
-            autoCapitalize="words"
-            placeholder="Company"
-          />
-        </div>
-        {error ? <p className="login-error">{error}</p> : null}
-        {message ? <p className="login-msg">{message}</p> : null}
-        <button type="submit" className="ad-btn" disabled={busy}>
-          {busy ? "Saving…" : "Pre-register"}
-        </button>
       </form>
     </section>
   );

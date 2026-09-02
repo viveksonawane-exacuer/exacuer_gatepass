@@ -173,6 +173,10 @@ function applyThemeVariables(opt: ThemeOption) {
   root.style.setProperty("--vms-pass-accent", opt.primary);
   root.style.setProperty("--vms-meeting", opt.primary);
   root.style.setProperty("--vms-brand-accent", opt.primary);
+  root.style.setProperty("--vms-dock-fab-bg", opt.primary);
+  root.style.setProperty("--vms-dock-fab-hover", opt.primaryHover);
+  root.style.setProperty("--vms-dock-indicator", opt.primary);
+  root.style.setProperty("--vms-dock-active-icon", opt.primary);
 }
 
 type AppThemeContextValue = {

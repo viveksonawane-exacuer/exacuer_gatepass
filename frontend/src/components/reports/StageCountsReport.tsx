@@ -50,36 +50,36 @@ export function StageCountsReport({
       : ut(lang, "stage_counts_sub");
 
   return (
-    <section className={`vm-stage-report ${className}`.trim()} aria-label={ut(lang, "stage_counts")}>
-      <div className="vm-stage-report-head">
+    <section className={`ds-stage-report ${className}`.trim()} aria-label={ut(lang, "stage_counts")}>
+      <div className="ds-stage-report-head">
         <div>
-          <h2 className="vm-stage-report-title">{ut(lang, "stage_counts")}</h2>
-          <p className="vm-stage-report-sub">{subtitle}</p>
+          <h2 className="ds-stage-report-title">{ut(lang, "stage_counts")}</h2>
+          <p className="ds-stage-report-sub">{subtitle}</p>
         </div>
       </div>
 
-      <div className="vm-stage-report-summary">
-        <div className="vm-stage-report-summary-item">
+      <div className="ds-stage-report-summary">
+        <div className="ds-stage-report-summary-item">
           <span>{ut(lang, "total_visitors")}</span>
           <strong>{loading ? "—" : formatCount(totalVisitors, lang)}</strong>
         </div>
-        <div className="vm-stage-report-summary-item">
+        <div className="ds-stage-report-summary-item">
           <span>{ut(lang, "active_inside")}</span>
           <strong>{loading ? "—" : formatCount(activeInside, lang)}</strong>
         </div>
       </div>
 
-      <div className="vm-stage-report-list">
+      <div className="ds-stage-report-list">
         {REPORT_STAGES.map((stage) => (
-          <div key={stage.key} className={`vm-stage-report-row tone-${stage.tone}`}>
-            <div className="vm-stage-report-row-main">
-              <span className="vm-stage-report-dot" aria-hidden />
-              <div className="vm-stage-report-copy">
-                <span className="vm-stage-report-label">{translateVisitorStatus(lang, stage.key)}</span>
-                <span className="vm-stage-report-hint">{ut(lang, stage.hintKey)}</span>
+          <div key={stage.key} className={`ds-stage-report-row tone-${stage.tone}`}>
+            <div className="ds-stage-report-row-main">
+              <span className="ds-stage-report-dot" aria-hidden />
+              <div className="ds-stage-report-copy">
+                <span className="ds-stage-report-label">{translateVisitorStatus(lang, stage.key)}</span>
+                <span className="ds-stage-report-hint">{ut(lang, stage.hintKey)}</span>
               </div>
             </div>
-            <strong className="vm-stage-report-value">
+            <strong className="ds-stage-report-value">
               {loading ? "—" : formatCount(counts[stage.key], lang)}
             </strong>
           </div>

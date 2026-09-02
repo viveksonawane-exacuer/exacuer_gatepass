@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Outlet, useLocation, useNavigate, useNavigationType } from "react-router-dom";
+import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
+import { PageTransition } from "@/components/design-system/PageTransition";
 import { FloatingNavbar } from "@/components/navigation/FloatingNavbar";
 import { OfflineIndicator } from "@/components/common/OfflineIndicator";
 import { HeaderBar } from "@/components/common/HeaderBar";
@@ -261,7 +262,7 @@ export function MobileLayout() {
               }}
             >
               {/* Remount on pathname and refreshKey so pull-to-refresh genuinely refreshes live data */}
-              <Outlet key={`${location.pathname}-${refreshKey}`} />
+              <PageTransition refreshKey={refreshKey} />
             </div>
           </main>
           <FloatingNavbar />

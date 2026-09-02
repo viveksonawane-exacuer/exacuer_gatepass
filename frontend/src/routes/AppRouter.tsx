@@ -36,11 +36,13 @@ import {
   hasVmsAppAccess,
   type CapabilityKey,
 } from "@/lib/roles";
+import { AppLoadingShell } from "@/components/common/AppLoadingShell";
+import { EmptyState } from "@/components/design-system/EmptyState";
 
 function RequirePwaAuth() {
   const { isAuthenticated, loading, user } = useAuth();
   if (loading) {
-    return <div className="login-page">Loading…</div>;
+    return <AppLoadingShell />;
   }
   if (!isAuthenticated && !user?.verified) {
     // Keep URL under /vms/ (not /vms/login) so PWA Install / start_url stay on /vms/
@@ -55,7 +57,7 @@ function RequireVmsAccess() {
   const location = useLocation();
 
   if (loading) {
-    return <div className="login-page">Loading…</div>;
+    return <AppLoadingShell />;
   }
 
   const isVisitorSession =
@@ -76,18 +78,18 @@ function RequireCapability({ capability }: { capability: CapabilityKey }) {
   const location = useLocation();
 
   if (loading) {
-    return <div className="login-page">Loading…</div>;
+    return <AppLoadingShell />;
   }
 
   if (!hasCapability(user, capability)) {
     const fallback = firstAllowedPath(user);
     if (fallback === location.pathname) {
       return (
-        <div className="login-page" style={{ padding: 24, textAlign: "center" }}>
-          <p>You do not have permission to use Visitor Management.</p>
-          <p style={{ opacity: 0.7, fontSize: 14 }}>
-            Ask an administrator to assign roles in Role Permission Manager.
-          </p>
+        <div className="ds-auth-page">
+          <EmptyState
+            title="Access restricted"
+            description="You do not have permission to use Visitor Management. Ask an administrator to assign roles in Role Permission Manager."
+          />
         </div>
       );
     }
@@ -105,7 +107,7 @@ function RequireCapability({ capability }: { capability: CapabilityKey }) {
 function VmsRootGate() {
   const { user, loading, isAuthenticated } = useAuth();
   if (loading) {
-    return <div className="login-page">Loading…</div>;
+    return <AppLoadingShell />;
   }
   if (!isAuthenticated && !user?.verified) {
     return <MobileLoginPage />;
@@ -115,7 +117,7 @@ function VmsRootGate() {
 
 function HomeOrRedirect() {
   const { user, loading } = useAuth();
-  if (loading) return <div className="login-page">Loading…</div>;
+  if (loading) return <AppLoadingShell />;
   if (!hasCapability(user, "dashboard")) {
     return <Navigate to={firstAllowedPath(user)} replace />;
   }
@@ -240,7 +242,7 @@ export function AppRouter() {
   );
 
   if (!router) {
-    return <div className="login-page">Loading…</div>;
+    return <AppLoadingShell />;
   }
 
   return <RouterProvider router={router} />;

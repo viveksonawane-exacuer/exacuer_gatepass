@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/WaterDropRangeToggle";
 import { LiveVisitorsCalendarButton } from "@/components/ui/LiveVisitorsCalendarButton";
 import { VisitorListRowCard } from "@/components/visitors/VisitorListRowCard";
+import { SearchBar } from "@/components/design-system/SearchBar";
+import { EmptyState } from "@/components/design-system/EmptyState";
 import { usePageChrome } from "@/context/PageChromeContext";
 import { useAppLanguage } from "@/context/AppLanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -190,12 +192,12 @@ export function MobileInsidePage() {
   }
 
   return (
-    <div className="vm-home-page vm-visitors-page">
+    <div className="ds-page ds-page--visitors">
 
-      <header className="vm-live-visitors-head">
-        <div className="vm-live-visitors-title-row">
-          <h1 className="vm-live-visitors-title">{ut(lang, "live_visitors")}</h1>
-          <div className="vm-live-visitors-controls">
+      <header className="ds-page-header ds-animate-in">
+        <div className="ds-page-header__row">
+          <h1 className="ds-page-header__title">{ut(lang, "live_visitors")}</h1>
+          <div className="ds-page-header__controls">
             <WaterDropRangeToggle
               value={rangeMode}
               onChange={setRangeMode}
@@ -212,23 +214,14 @@ export function MobileInsidePage() {
 
       <SimpleStatusFilter options={filterOptions} value={filter} onChange={setFilter} pinAllFilter />
 
-      <div className="vm-visitors-search">
-        <input
-          className="vm-input-field vm-visitors-search-input"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={ut(lang, "search_visitor_or_host")}
-          aria-label={ut(lang, "search_visitor_or_host")}
-        />
-        <span className="vm-search-icon" aria-hidden>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </span>
-      </div>
+      <SearchBar
+        value={query}
+        onChange={setQuery}
+        placeholder={ut(lang, "search_visitor_or_host")}
+        aria-label={ut(lang, "search_visitor_or_host")}
+      />
 
-      {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
+      {error ? <p className="login-error" style={{ textAlign: "center", margin: "0 1rem" }}>{error}</p> : null}
 
       {filter === "checkout_pending" ? (
         <CheckoutPendingReport
@@ -240,23 +233,24 @@ export function MobileInsidePage() {
           onCheckout={handleCheckout}
         />
       ) : (
-        <div className="vm-live-cards-container">
+        <div className="ds-visitor-list ds-stagger">
           {loading ? (
-            <p className="vm-empty-hint">{ut(lang, "loading_visitors")}</p>
+            <>
+              <div className="ds-skeleton" style={{ height: 120, borderRadius: 24 }} />
+              <div className="ds-skeleton" style={{ height: 120, borderRadius: 24 }} />
+            </>
           ) : displayList.length === 0 ? (
-            <div className="vm-empty-state-modern">
-              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#94a3b8" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4l3 3" />
-              </svg>
-              <p>No visitors found in this category</p>
+            <div className="ds-card">
+              <EmptyState
+                title="No visitors found"
+                description="No visitors match this filter. Try another status or search term."
+              />
             </div>
           ) : (
-            displayList.map((item, index) => (
+            displayList.map((item) => (
               <VisitorListRowCard
                 key={item.name}
                 item={item}
-                index={index}
                 onOpen={(row) => navigate(`/visitor/${encodeURIComponent(row.name)}`)}
               />
             ))

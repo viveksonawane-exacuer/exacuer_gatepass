@@ -8,6 +8,7 @@ import { localizePersonName } from "@/lib/transliterate";
 import { useAppLanguage } from "@/context/AppLanguageContext";
 import { translateVisitorStatus } from "@/i18n/uiChrome";
 import { VisitorAvatar } from "@/components/ui/VisitorAvatar";
+import { SearchBar } from "@/components/design-system/SearchBar";
 
 interface VisitorTimelineReportProps {
   rows: VisitorListRow[];
@@ -110,7 +111,7 @@ export function VisitorTimelineReport({
 
   if (loading) {
     return (
-      <div className="vm-timeline-empty-hint">
+      <div className="ds-timeline-empty ds-timeline-report">
         <span>Loading visitor analytics & timeline...</span>
       </div>
     );
@@ -118,33 +119,19 @@ export function VisitorTimelineReport({
 
   if (!groupedVisitors.length) {
     return (
-      <div className="vm-timeline-empty-hint">
+      <div className="ds-timeline-empty ds-timeline-report">
         <span>No visitor activity found for this date.</span>
       </div>
     );
   }
 
   return (
-    <div className="vm-visitor-analytics-container">
-      {/* Search Visitor Filter Bar */}
-      <div className="vm-visitor-search-box">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search by visitor name, mobile, or company..."
-          value={visitorSearch}
-          onChange={(e) => setVisitorSearch(e.target.value)}
-          className="vm-visitor-search-input"
-        />
-        {visitorSearch && (
-          <button type="button" className="vm-visitor-search-clear" onClick={() => setVisitorSearch("")}>
-            ✕
-          </button>
-        )}
-      </div>
+    <div className="vm-visitor-analytics-container ds-timeline-report">
+      <SearchBar
+        value={visitorSearch}
+        onChange={setVisitorSearch}
+        placeholder="Search by visitor name, mobile, or company..."
+      />
 
       {/* Selected Visitor Detail Modal / Banner */}
       {activeVisitor ? (

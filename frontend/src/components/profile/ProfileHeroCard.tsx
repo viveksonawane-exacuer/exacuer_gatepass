@@ -55,31 +55,43 @@ export function ProfileHeroCard({
   const displayImage = photo || imageUrl;
 
   return (
-    <div className="vm-profile-modern-card">
-      <div className="vm-profile-modern-header">
-        <div
-          className="vm-profile-avatar-container is-clickable"
-          role="button"
-          tabIndex={0}
+    <div className="ds-card ds-profile-hero">
+      <div className="ds-profile-hero__header">
+        <button
+          type="button"
+          className="ds-profile-hero__avatar-wrap"
           onClick={() => fileInputRef.current?.click()}
           title="Tap to change profile photo"
         >
           {displayImage ? (
             <img
-              src={displayImage.startsWith("http") || displayImage.startsWith("/") || displayImage.startsWith("data:") ? displayImage : `/${displayImage}`}
+              src={
+                displayImage.startsWith("http") ||
+                displayImage.startsWith("/") ||
+                displayImage.startsWith("data:")
+                  ? displayImage
+                  : `/${displayImage}`
+              }
               alt={name}
-              className="vm-profile-avatar-img"
+              className="ds-profile-hero__avatar"
             />
           ) : (
-            <div className="vm-profile-avatar-fallback">
+            <div className="ds-profile-hero__avatar-fallback">
               <span>{avatarInitials || "AD"}</span>
             </div>
           )}
-          <div className="vm-avatar-upload-badge">
-            {busy ? "..." : "📷"}
-          </div>
-          <span className="vm-profile-status-dot" title="Active" />
-        </div>
+          <span className="ds-profile-hero__avatar-badge" aria-hidden>
+            {busy ? (
+              <span style={{ fontSize: 10 }}>…</span>
+            ) : (
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            )}
+          </span>
+          <span className="ds-profile-hero__status-dot" title="Active" />
+        </button>
 
         <input
           ref={fileInputRef}
@@ -89,35 +101,41 @@ export function ProfileHeroCard({
           onChange={handlePhotoSelect}
         />
 
-        <div className="vm-profile-identity-box">
-          <div className="vm-profile-name-row">
-            <h2 className="vm-profile-name">{name}</h2>
-            <span className="vm-profile-verified-badge">✓</span>
+        <div className="ds-profile-hero__identity">
+          <div className="ds-profile-hero__name-row">
+            <h2 className="ds-profile-hero__name">{name}</h2>
+            <span className="ds-profile-hero__verified" aria-label="Verified">
+              ✓
+            </span>
           </div>
-          <div className="vm-profile-role-pill">
-            <span className="vm-profile-role-icon">🛡️</span>
+          <div className="ds-profile-hero__role">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
             <span>{role}</span>
           </div>
         </div>
       </div>
 
-      <div className="vm-profile-grid-meta">
-        <div className="vm-profile-meta-item">
-          <span className="vm-profile-meta-label">{ut(lang, "employee_id")}</span>
-          <strong className="vm-profile-meta-val">{employeeId || "—"}</strong>
+      <div className="ds-profile-hero__grid">
+        <div className="ds-profile-hero__meta-item">
+          <span className="ds-profile-hero__meta-label">{ut(lang, "employee_id")}</span>
+          <strong className="ds-profile-hero__meta-value">{employeeId || "—"}</strong>
         </div>
-        <div className="vm-profile-meta-item">
-          <span className="vm-profile-meta-label">{ut(lang, "email")}</span>
-          <strong className="vm-profile-meta-val" title={email}>{email || "—"}</strong>
+        <div className="ds-profile-hero__meta-item">
+          <span className="ds-profile-hero__meta-label">{ut(lang, "email")}</span>
+          <strong className="ds-profile-hero__meta-value" title={email}>
+            {email || "—"}
+          </strong>
         </div>
-        <div className="vm-profile-meta-item">
-          <span className="vm-profile-meta-label">{ut(lang, "department")}</span>
-          <strong className="vm-profile-meta-val">{department || "Operations"}</strong>
+        <div className="ds-profile-hero__meta-item">
+          <span className="ds-profile-hero__meta-label">{ut(lang, "department")}</span>
+          <strong className="ds-profile-hero__meta-value">{department || "Operations"}</strong>
         </div>
-        <div className="vm-profile-meta-item">
-          <span className="vm-profile-meta-label">Status</span>
-          <strong className="vm-profile-meta-val vm-profile-status-val">
-            <span className="vm-live-pulse-dot" /> Active Session
+        <div className="ds-profile-hero__meta-item">
+          <span className="ds-profile-hero__meta-label">Status</span>
+          <strong className="ds-profile-hero__meta-value is-active">
+            <span className="ds-live-pulse-dot" /> Active Session
           </strong>
         </div>
       </div>
