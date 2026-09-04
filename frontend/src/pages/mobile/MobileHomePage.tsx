@@ -10,8 +10,9 @@ import { formatCount, formatTime } from "@/lib/format";
 import { getCurrentStageTimestamp } from "@/lib/visitStages";
 import { useAppLanguage } from "@/context/AppLanguageContext";
 import { usePageChrome } from "@/context/PageChromeContext";
-import { VisitorStatusDashboard } from "@/components/dashboard/VisitorStatusDashboard";
+import { GateFlowBuildingCard } from "@/components/dashboard/GateFlowBuildingCard";
 import { RecentVisitorsList, type RecentVisitorItem } from "@/components/dashboard/RecentVisitorsList";
+import { QuickActionsGrid } from "@/components/dashboard/QuickActionsGrid";
 import { MetricCard, MetricCardSkeletonGrid } from "@/components/design-system/MetricCard";
 import { useVmsRealtime } from "@/hooks/useVmsRealtime";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
@@ -162,13 +163,18 @@ export function MobileHomePage() {
   );
 
   const todayVisitors = useMemo(() => {
-    const fromKpi = Number(kpis["Checked In"] ?? 0) + Number(kpis["Meeting Done"] ?? 0) + Number(kpis.Approved ?? 0) + Number(kpis["Pending Approval"] ?? kpis.pending ?? 0);
+    const fromKpi =
+      Number(kpis["Checked In"] ?? 0) +
+      Number(kpis["Meeting Done"] ?? 0) +
+      Number(kpis.Approved ?? 0) +
+      Number(kpis["Pending Approval"] ?? kpis.pending ?? 0);
     if (fromKpi > 0) return fromKpi;
     return recentRows.length;
   }, [kpis, recentRows.length]);
 
   return (
     <div className="ds-page ds-page--home">
+      {/* 1. Status Overview */}
       <div className="vm-home-overview-head ds-animate-in">
         <h2>{ut(lang, "status_overview")}</h2>
         <p>{ut(lang, "status_overview_sub")}</p>
@@ -223,6 +229,7 @@ export function MobileHomePage() {
         )}
       </section>
 
+      {/* 3. Main Body Stack */}
       <div className="vm-home-stack ds-stagger" style={{ paddingTop: 16 }}>
         {error ? (
           <p className="login-error" style={{ textAlign: "center" }}>
@@ -230,16 +237,22 @@ export function MobileHomePage() {
           </p>
         ) : null}
 
-        <VisitorStatusDashboard
+        {/* Gate flow (Live floor-wise occupancy — 3D building view) */}
+        <GateFlowBuildingCard
+          lang={lang}
           kpis={kpis}
           rows={recentRows}
           loading={loading}
-          title="Gate flow"
-          subtitle="Live floor-wise occupancy — 3D building view"
-          className="ds-card"
+          onNavigateInside={() => navigate("/inside?status=inside")}
+          onNavigatePending={() => navigate("/approvals")}
+          onNavigateApproved={() => navigate("/approvals?tab=approved")}
         />
 
+        {/* Recent Visitors */}
         <RecentVisitorsList visitors={recentVisitors} loading={loading} />
+
+        {/* Quick Action Cards (Add Visitor, Schedule Meeting, Generate Gate Pass, View Reports) */}
+        <QuickActionsGrid />
       </div>
     </div>
   );

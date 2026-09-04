@@ -211,8 +211,6 @@ def approve(visitor_entry: str | None = None, remarks: str | None = None, floor:
 
 	if floor:
 		doc.floor = floor
-	if not doc.floor:
-		frappe.throw(_("Please select a floor before approval."))
 
 	doc.status = "Approved"
 	doc.approved_on = now_datetime()

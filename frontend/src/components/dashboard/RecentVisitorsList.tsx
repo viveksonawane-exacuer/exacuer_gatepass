@@ -38,16 +38,16 @@ export function RecentVisitorsList({ visitors = [], loading = false }: RecentVis
     <div className="ds-card vm-recent-card">
       <SectionHeader
         title={ut(lang, "recent_visitors")}
-        actionLabel={`${ut(lang, "view_all")} ›`}
+        actionLabel="View All »"
         onAction={() => navigate("/inside")}
       />
 
       <div className="ds-activity-list ds-stagger">
         {loading ? (
           <>
-            <div className="ds-skeleton" style={{ height: 72, borderRadius: 20 }} />
-            <div className="ds-skeleton" style={{ height: 72, borderRadius: 20 }} />
-            <div className="ds-skeleton" style={{ height: 72, borderRadius: 20 }} />
+            <div className="ds-skeleton" style={{ height: 64, borderRadius: 16 }} />
+            <div className="ds-skeleton" style={{ height: 64, borderRadius: 16 }} />
+            <div className="ds-skeleton" style={{ height: 64, borderRadius: 16 }} />
           </>
         ) : visitors.length === 0 ? (
           <EmptyState
@@ -60,25 +60,25 @@ export function RecentVisitorsList({ visitors = [], loading = false }: RecentVis
             <button
               key={v.name}
               type="button"
-              className="ds-activity-card"
+              className="ds-activity-card vm-recent-visitor-row"
               onClick={() => navigate(`/visitor/${encodeURIComponent(v.name)}`)}
             >
-              <VisitorAvatar name={v.full_name} photo={v.photo} size={44} />
+              <VisitorAvatar name={v.full_name} photo={v.photo} size={42} />
               <div className="ds-activity-card__body">
                 <span className="ds-activity-card__title">{v.full_name}</span>
                 {v.purpose ? (
                   <span className="ds-activity-card__desc">{v.purpose}</span>
                 ) : null}
-                <div style={{ marginTop: 6 }}>
-                  <StatusPill
-                    label={v.status}
-                    variant={resolveStatusPillVariant(v.statusRaw || v.status)}
-                  />
-                </div>
+              </div>
+              <div className="vm-recent-status-col">
+                <StatusPill
+                  label={v.status}
+                  variant={resolveStatusPillVariant(v.statusRaw || v.status)}
+                />
               </div>
               <div className="ds-activity-card__meta">
                 <span className="ds-activity-card__time">{v.time}</span>
-                <span aria-hidden style={{ color: "var(--vms-placeholder)", fontSize: 18 }}>
+                <span aria-hidden className="vm-recent-visitor-arrow">
                   ›
                 </span>
               </div>

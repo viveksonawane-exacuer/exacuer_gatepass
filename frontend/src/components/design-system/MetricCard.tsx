@@ -44,6 +44,20 @@ export function MetricCard({
       </div>
       <span className="ds-metric-card__label">{label}</span>
       {meta ? <span className="ds-metric-card__meta">{meta}</span> : null}
+
+      <svg
+        className={`ds-metric-card__wave ds-metric-card__wave--${tone}`}
+        viewBox="0 0 120 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0 32 C 40 18, 70 48, 120 18 L 120 48 L 0 48 Z"
+          fill="currentColor"
+        />
+      </svg>
     </Tag>
   );
 }

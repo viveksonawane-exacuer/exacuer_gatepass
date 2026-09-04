@@ -11,7 +11,6 @@ import { ErpNextToast, type ErpToastData } from "@/components/common/ErpNextToas
 import { PendingDecisionCard } from "@/components/approvals/PendingDecisionCard";
 import { SearchBar } from "@/components/design-system/SearchBar";
 import { EmptyState } from "@/components/design-system/EmptyState";
-import { ApprovalFloorModal } from "@/components/approvals/ApprovalFloorModal";
 import { ApprovalRejectModal } from "@/components/approvals/ApprovalRejectModal";
 import { ApprovalTransferModal } from "@/components/approvals/ApprovalTransferModal";
 import { ViewGatePassModal } from "@/components/approvals/ViewGatePassModal";
@@ -183,7 +182,6 @@ export function MobileApprovalsPage() {
   const [rejectVisitor, setRejectVisitor] = useState<VisitorListRow | null>(null);
   const [transferVisitor, setTransferVisitor] = useState<VisitorListRow | null>(null);
   const [toast, setToast] = useState<ErpToastData | null>(null);
-  const [approveVisitor, setApproveVisitor] = useState<VisitorListRow | null>(null);
   const [passVisitor, setPassVisitor] = useState<VisitorListRow | null>(null);
 
   useEffect(() => {
@@ -245,25 +243,28 @@ export function MobileApprovalsPage() {
     void load();
   });
 
-  const handleApprove = useCallback((item: VisitorListRow) => {
-    setApproveVisitor(item);
-  }, []);
-
-  const handleApproveWithFloor = useCallback(
-    async (visitor: VisitorListRow, floor: string) => {
+  const handleApprove = useCallback(
+    async (visitor: VisitorListRow) => {
       setBusy(visitor.name);
       try {
-        await approvalApi.approve(visitor.name, undefined, floor);
-        setApproveVisitor(null);
+        await approvalApi.approve(visitor.name, undefined, visitor.floor || undefined);
+        const host = visitor.person_to_meet_name || visitor.person_to_meet || "host";
         setToast({
           id: Date.now().toString(),
-          title: "Visitor approved",
-          message: `${visitor.full_name || visitor.name} was approved${floor ? ` for ${floor}` : ""}.`,
+          title: "Visitor accepted",
+          message: "Visitor accepted and notification sent to host person successfully.",
+          hostName: host,
+          visitorEntry: visitor.name,
           time: formatNowTime(lang),
         });
         void load();
       } catch (err: unknown) {
-        throw err instanceof Error ? err : new Error("Approve failed");
+        setToast({
+          id: Date.now().toString(),
+          title: "Approval failed",
+          message: err instanceof Error ? err.message : "Could not accept visitor.",
+          time: formatNowTime(lang),
+        });
       } finally {
         setBusy(null);
       }
@@ -691,13 +692,6 @@ export function MobileApprovalsPage() {
         }}
       />
 
-      <ApprovalFloorModal
-        visitor={approveVisitor}
-        open={!!approveVisitor}
-        busy={!!approveVisitor && busy === approveVisitor.name}
-        onClose={() => setApproveVisitor(null)}
-        onConfirm={handleApproveWithFloor}
-      />
 
       <ViewGatePassModal
         visitor={passVisitor}
