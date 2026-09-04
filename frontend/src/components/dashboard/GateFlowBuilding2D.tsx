@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { settingsApi, type DashboardKpis, type VisitorListRow } from "@/api/vms";
-import { buildFloorOptions } from "@/lib/floorOptions";
-import {
-  buildGateFlowSceneData,
-  type BuildingOccupancy,
-  type FloorOccupancy,
-} from "@/lib/gateFlowBuildingData";
+import { apiClient } from "@/api/client";
+import type { DashboardKpis, VisitorListRow } from "@/api/vms";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { COMPANY_NAME } from "@/config/env";
+import { buildGateFlowSceneData } from "@/lib/gateFlowBuildingData";
 import { formatCount } from "@/lib/format";
 import type { VisitorLang } from "@/i18n/visitorJourney";
 
@@ -15,49 +13,35 @@ type Props = {
   rows?: VisitorListRow[];
   loading?: boolean;
   onGateNavigate?: () => void;
-  onFloorNavigate?: (building: BuildingOccupancy, floor: FloorOccupancy) => void;
+  onInsideNavigate?: () => void;
 };
 
-function CubeLogo() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#60a5fa" strokeWidth="2.2">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
-  );
+async function fetchCompanyName(): Promise<string> {
+  try {
+    const { data } = await apiClient.post(`/api/method/frappe.client.get_single_value`, {
+      doctype: "Global Defaults",
+      field: "default_company",
+    });
+    return String(data?.message || "").trim();
+  } catch {
+    return "";
+  }
 }
 
-function BuildingIcon() {
+function UsersIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
-    </svg>
-  );
-}
-
-function GridIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#818cf8" strokeWidth="2.2">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }
 
 function ShieldIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ea580c" strokeWidth="2.2">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
-
-function HeadquartersIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#93c5fd" strokeWidth="2">
-      <path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7" />
     </svg>
   );
 }
@@ -68,216 +52,105 @@ export function GateFlowBuilding2D({
   rows = [],
   loading = false,
   onGateNavigate,
-  onFloorNavigate,
+  onInsideNavigate,
 }: Props) {
-  const [floorOptions, setFloorOptions] = useState<ReturnType<typeof buildFloorOptions>>([]);
+  const [companyName, setCompanyName] = useState("");
 
-  const sceneData = useMemo(
-    () => buildGateFlowSceneData(kpis, rows, floorOptions),
-    [kpis, rows, floorOptions],
-  );
-
-  const mainBuilding = sceneData.buildings[0];
+  const sceneData = useMemo(() => buildGateFlowSceneData(kpis, rows), [kpis, rows]);
+  const { occupancy, gate } = sceneData;
+  const todayTotal = occupancy.pending + occupancy.inTransit + occupancy.completed;
+  const displayCompany = (companyName || COMPANY_NAME).trim() || "Exacuer Global";
 
   useEffect(() => {
     let cancelled = false;
-    void settingsApi
-      .getMasters()
-      .then((masters) => {
-        if (cancelled) return;
-        setFloorOptions(buildFloorOptions(masters || {}));
-      })
-      .catch(() => undefined);
+    void fetchCompanyName().then((name) => {
+      if (!cancelled) setCompanyName(name);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Display floors from top to bottom: Second Floor -> First Floor -> Ground Floor
-  const stackedFloors = useMemo(() => {
-    if (!mainBuilding) return [];
-    return [...mainBuilding.floors].reverse();
-  }, [mainBuilding]);
-
-  const maxFloorTotal = useMemo(() => {
-    if (!mainBuilding) return 1;
-    const totals = mainBuilding.floors.map((f) => f.pending + f.inTransit + f.completed);
-    return Math.max(1, ...totals);
-  }, [mainBuilding]);
-
   return (
-    <div className="ds-totem-stage">
-      {/* ── ARCHITECTURAL TOTEM CONTAINER ── */}
-      <div className="ds-totem">
-        {/* 1. TOP NEON SIGNBOARD */}
-        <div className="ds-totem__sign-wrapper">
-          <div className="ds-totem__sign">
-            <div className="ds-totem__sign-brand">
-              <CubeLogo />
-              <span className="ds-totem__sign-title">EXACUER GLOBAL</span>
-            </div>
-            <div className="ds-totem__sign-badge">
-              <HeadquartersIcon />
-              <span>{loading ? "SYNCING…" : "HEADQUARTERS"}</span>
-            </div>
-          </div>
-          <div className="ds-totem__sign-stem" />
-        </div>
-
-        {/* 2. TOTEM MAIN BODY TOWER */}
-        <div className="ds-totem__body">
-          {/* Top Cap */}
-          <div className="ds-totem__cap">
-            <div className="ds-totem__led-strip" />
-          </div>
-
-          {/* FLOORS STACK (Second Floor -> First Floor -> Ground Floor) */}
-          <div className="ds-totem__levels">
-            {stackedFloors.map((floor) => {
-              const total = floor.pending + floor.inTransit + floor.completed;
-              const percent = Math.min(100, Math.max(8, Math.round((total / maxFloorTotal) * 100)));
-
-              return (
-                <div key={`${floor.label}-${floor.number}`} className="ds-totem__floor-shelf">
-                  <div
-                    className="ds-totem__floor-row"
-                    onClick={() => {
-                      if (onFloorNavigate && mainBuilding) onFloorNavigate(mainBuilding, floor);
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        if (onFloorNavigate && mainBuilding) onFloorNavigate(mainBuilding, floor);
-                      }
-                    }}
-                  >
-                    {/* Left Wing Pylon Badge */}
-                    <div className="ds-totem__wing-pylon">
-                      <div className="ds-totem__pylon-icon">
-                        <BuildingIcon />
-                      </div>
-                      <span className="ds-totem__pylon-title">{floor.label}</span>
-                      <span className="ds-totem__pylon-code">
-                        {floor.floorCode || `FLOOR ${floor.number}`}
-                      </span>
-                    </div>
-
-                    {/* Right Main Digital Card */}
-                    <div className="ds-totem__card-main">
-                      <div className="ds-totem__card-head">
-                        <div className="ds-totem__card-head-title">
-                          <GridIcon />
-                          <span>{floor.label}</span>
-                        </div>
-                        <div className="ds-totem__card-head-trail">
-                          <span><b>{total}</b> today</span>
-                          <span className="ds-totem__card-chevron">›</span>
-                        </div>
-                      </div>
-
-                      {/* Blue Gradient Progress / Flow Bar */}
-                      <div className="ds-totem__progress-track">
-                        <div
-                          className="ds-totem__progress-bar"
-                          style={{ width: `${total > 0 ? percent : 4}%` }}
-                        />
-                      </div>
-
-                      {/* 3 Metric Columns: PENDING, IN-TRANSIT, COMPLETED */}
-                      <div className="ds-totem__metrics-grid">
-                        <div className="ds-totem__metric-box">
-                          <span className="ds-totem__metric-num ds-totem__metric-num--blue">
-                            {floor.pending}
-                          </span>
-                          <span className="ds-totem__metric-tag">PENDING</span>
-                        </div>
-                        <div className="ds-totem__metric-box">
-                          <span className="ds-totem__metric-num ds-totem__metric-num--indigo">
-                            {floor.inTransit}
-                          </span>
-                          <span className="ds-totem__metric-tag">IN-TRANSIT</span>
-                        </div>
-                        <div className="ds-totem__metric-box">
-                          <span className="ds-totem__metric-num ds-totem__metric-num--orange">
-                            {floor.completed}
-                          </span>
-                          <span className="ds-totem__metric-tag">COMPLETED</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Shelf Divider Bar with Warm LED */}
-                  <div className="ds-totem__shelf-divider">
-                    <div className="ds-totem__shelf-led" />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* 3. BOTTOM LEVEL: SECURITY GATE STATION */}
-            <div className="ds-totem__gate-shelf">
-              <div
-                className="ds-totem__gate-row"
-                onClick={onGateNavigate}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    if (onGateNavigate) onGateNavigate();
-                  }
-                }}
-              >
-                <div className="ds-totem__gate-main">
-                  <div className="ds-totem__gate-left">
-                    <div className="ds-totem__gate-shield-box">
-                      <ShieldIcon />
-                    </div>
-                    <div className="ds-totem__gate-info">
-                      <div className="ds-totem__gate-title-row">
-                        <strong className="ds-totem__gate-title">Security Gate Station</strong>
-                        <span className="ds-totem__gate-tag">GATE DESK</span>
-                      </div>
-                      <p className="ds-totem__gate-sub">Visitor entrance & approval desk</p>
-                      <div className="ds-totem__gate-approved">
-                        <span className="ds-totem__gate-dot" />
-                        <span>{formatCount(sceneData.gate.approved, lang)} approved passes</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Pending Approval Box */}
-                  <div className="ds-totem__gate-right">
-                    <span className="ds-totem__gate-pending-num">
-                      {sceneData.gate.pendingApproval}
-                    </span>
-                    <span className="ds-totem__gate-pending-tag">PENDING APPROVAL</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Foundation Base Platform with Under-Glow */}
-          <div className="ds-totem__base">
-            <div className="ds-totem__base-led" />
+    <div className="ds-gateflow">
+      <header className="ds-gateflow__header">
+        <div className="ds-gateflow__brand">
+          <BrandLogo variant="icon" className="ds-gateflow__logo" alt={displayCompany} />
+          <div className="ds-gateflow__brand-copy">
+            <strong className="ds-gateflow__company">{displayCompany}</strong>
+            <span className="ds-gateflow__company-sub">
+              {loading ? "Syncing live status…" : "Visitor management"}
+            </span>
           </div>
         </div>
+      </header>
 
-        {/* 4. MOTORIZED BOOM BARRIER (ORANGE / WHITE STRIPED) ON PLAZA FLOOR */}
-        <div className="ds-totem__barrier-wrap" aria-hidden>
-          <div className="ds-totem__barrier-arm">
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--orange" />
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--white" />
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--orange" />
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--white" />
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--orange" />
-            <span className="ds-totem__barrier-stripe ds-totem__barrier-stripe--white" />
+      <button
+        type="button"
+        className="ds-gateflow__site-card"
+        onClick={onInsideNavigate}
+        aria-label={`Today's visitors: ${todayTotal}`}
+      >
+        <div className="ds-gateflow__site-head">
+          <div className="ds-gateflow__site-title">
+            <span className="ds-gateflow__site-icon" aria-hidden>
+              <UsersIcon />
+            </span>
+            <span>Today's visitors</span>
           </div>
-          <div className="ds-totem__barrier-post" />
+          <span className="ds-gateflow__site-trail">
+            <b>{formatCount(todayTotal, lang)}</b> today ›
+          </span>
         </div>
-      </div>
+
+        <div className="ds-gateflow__metrics" role="list">
+          <div className="ds-gateflow__metric" role="listitem">
+            <span className="ds-gateflow__metric-num ds-gateflow__metric-num--pending">
+              {occupancy.pending}
+            </span>
+            <span className="ds-gateflow__metric-label">Pending</span>
+          </div>
+          <div className="ds-gateflow__metric" role="listitem">
+            <span className="ds-gateflow__metric-num ds-gateflow__metric-num--transit">
+              {occupancy.inTransit}
+            </span>
+            <span className="ds-gateflow__metric-label">In-transit</span>
+          </div>
+          <div className="ds-gateflow__metric" role="listitem">
+            <span className="ds-gateflow__metric-num ds-gateflow__metric-num--done">
+              {occupancy.completed}
+            </span>
+            <span className="ds-gateflow__metric-label">Completed</span>
+          </div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        className="ds-gateflow__gate-card"
+        onClick={onGateNavigate}
+        aria-label={`Security gate: ${gate.pendingApproval} pending approval`}
+      >
+        <div className="ds-gateflow__gate-left">
+          <span className="ds-gateflow__gate-icon" aria-hidden>
+            <ShieldIcon />
+          </span>
+          <div className="ds-gateflow__gate-copy">
+            <div className="ds-gateflow__gate-title-row">
+              <strong className="ds-gateflow__gate-title">Security Gate Station</strong>
+              <span className="ds-gateflow__gate-tag">Gate desk</span>
+            </div>
+            <p className="ds-gateflow__gate-sub">Visitor entrance & approval desk</p>
+            <span className="ds-gateflow__gate-approved">
+              {formatCount(gate.approved, lang)} approved passes
+            </span>
+          </div>
+        </div>
+        <div className="ds-gateflow__gate-pending">
+          <span className="ds-gateflow__gate-pending-num">{gate.pendingApproval}</span>
+          <span className="ds-gateflow__gate-pending-label">Pending approval</span>
+        </div>
+      </button>
     </div>
   );
 }

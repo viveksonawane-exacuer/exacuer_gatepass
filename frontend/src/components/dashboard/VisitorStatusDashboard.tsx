@@ -6,7 +6,6 @@ import { useAppLanguage } from "@/context/AppLanguageContext";
 import { formatCount } from "@/lib/format";
 import { ut } from "@/i18n/uiChrome";
 import { GateFlowBuilding2D } from "@/components/dashboard/GateFlowBuilding2D";
-import type { BuildingOccupancy, FloorOccupancy } from "@/lib/gateFlowBuildingData";
 
 interface VisitorStatusDashboardProps {
   kpis?: DashboardKpis;
@@ -32,7 +31,7 @@ export function VisitorStatusDashboard({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const counts = resolveStatusCounts(kpis, rows);
   const heading = title ?? ut(lang, "status_overview");
-  const sub = subtitle ?? "Live floor-wise occupancy & campus analytics";
+  const sub = subtitle ?? "Live visitor occupancy & gate status";
 
   const totalActive =
     (counts["Pending Approval"] || 0) +
@@ -41,7 +40,6 @@ export function VisitorStatusDashboard({
 
   return (
     <section className={`vm-status-accordion-card ${className}`.trim()} aria-label={heading}>
-      {/* Collapsible Dropdown Header Toggle */}
       <button
         type="button"
         className={`vm-status-accordion-header${isOpen ? " is-open" : ""}`}
@@ -80,7 +78,6 @@ export function VisitorStatusDashboard({
         </div>
       </button>
 
-      {/* Accordion Body */}
       {isOpen ? (
         <div className="vm-status-accordion-body">
           <GateFlowBuilding2D
@@ -89,9 +86,7 @@ export function VisitorStatusDashboard({
             rows={rows}
             loading={loading}
             onGateNavigate={() => navigate("/approvals?tab=pending")}
-            onFloorNavigate={(_building: BuildingOccupancy, _floor: FloorOccupancy) =>
-              navigate("/inside?status=inside")
-            }
+            onInsideNavigate={() => navigate("/inside?status=inside")}
           />
         </div>
       ) : null}

@@ -176,7 +176,10 @@ export function ViewGatePassModal({ visitor, open, onClose }: Props) {
             qrPayload={passUrl || `${window.location.origin}/vms/pass/${encodeURIComponent(passCode)}`}
             visitorCount={visitorCount}
             additionalGuests={additionalGuests}
-            hideActions
+            onDownload={() => {
+              if (passUrl) window.open(passUrl, "_blank", "noopener,noreferrer");
+              else window.print();
+            }}
           />
         ) : null}
       </div>

@@ -64,42 +64,68 @@ export function MobileLoginPage() {
   }
 
   return (
-    <div className="ds-auth-page">
-      <div className="ds-auth-frame">
-        <span className="ds-auth-pill">ERPNext Sign In</span>
+    <div className="ds-auth-page ds-auth-page--soft">
+      <div className="ds-auth-hero" aria-hidden>
+        <span className="ds-auth-hero__orb ds-auth-hero__orb--a" />
+        <span className="ds-auth-hero__orb ds-auth-hero__orb--b" />
+      </div>
 
-        <div className="ds-auth-intro">
-          <BrandLogo variant="full" className="welcome-wordmark" />
-          <h1 className="ds-auth-title">Sign In to Exacuer Global</h1>
-          <p className="ds-auth-subtitle">Use your ERPNext username or email and password</p>
+      <div className="ds-auth-frame ds-auth-frame--soft">
+        <div className="ds-auth-brand-panel">
+          <BrandLogo variant="full" className="welcome-wordmark ds-auth-brand-logo" />
+          <span className="ds-auth-pill">Visitor Management</span>
+          <h1 className="ds-auth-title">Welcome back</h1>
+          <p className="ds-auth-subtitle">
+            Sign in with your ERPNext account to manage gate approvals and live visitors.
+          </p>
         </div>
 
-        <form className="ds-auth-form" onSubmit={onPasswordLogin}>
+        <form className="ds-auth-form ds-auth-form--soft" onSubmit={onPasswordLogin}>
+          <div className="ds-auth-form__head">
+            <strong>ERPNext Sign In</strong>
+            <span>Username or email + password</span>
+          </div>
+
           <div className="ds-auth-field">
             <label className="ds-auth-label" htmlFor="login-username">
-              ERPNext Username / Email *
+              Username / Email
             </label>
-            <input
-              id="login-username"
-              type="text"
-              className="ds-input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoCapitalize="none"
-              autoComplete="username"
-            />
+            <div className="ds-auth-input-shell">
+              <span className="ds-auth-input-icon" aria-hidden>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              <input
+                id="login-username"
+                type="text"
+                className="ds-input ds-auth-input"
+                placeholder="name@company.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoCapitalize="none"
+                autoComplete="username"
+              />
+            </div>
           </div>
 
           <div className="ds-auth-field">
             <label className="ds-auth-label" htmlFor="login-password">
-              Password *
+              Password
             </label>
-            <div className="ds-auth-password-wrap">
+            <div className="ds-auth-input-shell">
+              <span className="ds-auth-input-icon" aria-hidden>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
               <input
                 id="login-password"
                 type={showPassword ? "text" : "password"}
-                className="ds-input"
+                className="ds-input ds-auth-input"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -121,8 +147,10 @@ export function MobileLoginPage() {
           {message ? <p className="ds-auth-msg">{message}</p> : null}
 
           <button type="submit" className="ds-btn-primary ds-auth-submit" disabled={busy}>
-            {busy ? "Signing in…" : "Sign In with ERPNext"}
+            {busy ? "Signing in…" : "Continue"}
           </button>
+
+          <p className="ds-auth-footnote">Secure access · Exacuer Global VMS</p>
         </form>
       </div>
     </div>

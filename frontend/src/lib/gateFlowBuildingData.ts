@@ -1,5 +1,4 @@
 import type { DashboardKpis, VisitorListRow } from "@/api/vms";
-import type { FloorOption } from "@/lib/floorOptions";
 
 export type VisitorFlowBucket = "pending" | "inTransit" | "completed";
 
@@ -10,24 +9,16 @@ export type LiveVisitorFigure = {
   rawStatus: string;
 };
 
-export type FloorOccupancy = {
-  number: number;
-  label: string;
-  floorCode: string;
+/** Site-wide visitor occupancy (no floor split). */
+export type SiteOccupancy = {
   pending: number;
   inTransit: number;
   completed: number;
   visitors: LiveVisitorFigure[];
 };
 
-export type BuildingOccupancy = {
-  id: string;
-  name: string;
-  floors: FloorOccupancy[];
-};
-
 export type GateFlowSceneData = {
-  buildings: BuildingOccupancy[];
+  occupancy: SiteOccupancy;
   gate: {
     pendingApproval: number;
     approved: number;
@@ -35,8 +26,6 @@ export type GateFlowSceneData = {
   };
   totalLive: number;
 };
-
-const MAIN_BUILDING_NAME = "Exacuer Global";
 
 export function mapVisitorFlowBucket(status?: string): VisitorFlowBucket | null {
   const value = (status || "").trim();
@@ -89,10 +78,6 @@ export function isRecordFromToday(row: VisitorListRow): boolean {
   }
 }
 
-function emptyFloor(label: string, number: number, floorCode: string): FloorOccupancy {
-  return { number, label, floorCode, pending: 0, inTransit: 0, completed: 0, visitors: [] };
-}
-
 function visitorName(row: VisitorListRow): string {
   return row.full_name || row.first_name || row.name || "Visitor";
 }
@@ -100,19 +85,18 @@ function visitorName(row: VisitorListRow): string {
 export function buildGateFlowSceneData(
   kpis: DashboardKpis = {},
   rows: VisitorListRow[] = [],
-  _floorOptions: FloorOption[] = [],
 ): GateFlowSceneData {
   const pendingApproval = Number(kpis["Pending Approval"] ?? kpis.pending ?? 0);
   const approved = Number(kpis.Approved ?? 0);
 
-  // Filter rows strictly to today
   const todayRows = rows.filter(isRecordFromToday);
 
-  // Standard 3 proper floors from Ground to Second Floor
-  const groundFloor = emptyFloor("Ground Floor", 1, "FLOOR 1");
-  const firstFloor = emptyFloor("First Floor", 2, "FLOOR 2");
-  const secondFloor = emptyFloor("Second Floor", 3, "FLOOR 3");
-
+  const occupancy: SiteOccupancy = {
+    pending: 0,
+    inTransit: 0,
+    completed: 0,
+    visitors: [],
+  };
   const gateQueue: LiveVisitorFigure[] = [];
 
   for (const row of todayRows) {
@@ -126,30 +110,16 @@ export function buildGateFlowSceneData(
       rawStatus: row.status || "—",
     };
 
-    // Pending approvals belong strictly at the Security Gate
     if (bucket === "pending") {
       gateQueue.push(figure);
+      occupancy.pending += 1;
       continue;
     }
 
-    const rawFloor = String(row.floor || "").trim().toLowerCase();
-
-    // Map to the proper building floor (Ground Floor, First Floor, Second Floor)
-    let targetFloor: FloorOccupancy = groundFloor;
-    if (rawFloor.includes("second") || rawFloor.includes("2nd") || rawFloor === "2") {
-      targetFloor = secondFloor;
-    } else if (rawFloor.includes("first") || rawFloor.includes("1st") || rawFloor === "1") {
-      targetFloor = firstFloor;
-    } else {
-      targetFloor = groundFloor;
-    }
-
-    if (bucket === "inTransit") targetFloor.inTransit += 1;
-    if (bucket === "completed") targetFloor.completed += 1;
-    targetFloor.visitors.push(figure);
+    if (bucket === "inTransit") occupancy.inTransit += 1;
+    if (bucket === "completed") occupancy.completed += 1;
+    occupancy.visitors.push(figure);
   }
-
-  const floors = [groundFloor, firstFloor, secondFloor];
 
   const totalLive =
     todayRows.filter((row) => mapVisitorFlowBucket(row.status) === "inTransit").length ||
@@ -168,7 +138,7 @@ export function buildGateFlowSceneData(
         }));
 
   return {
-    buildings: [{ id: "main-campus", name: MAIN_BUILDING_NAME, floors }],
+    occupancy,
     gate: { pendingApproval: effectivePending, approved, queue },
     totalLive,
   };

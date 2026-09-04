@@ -201,15 +201,6 @@ export function VisitorGatePassCard({
 
       {!hideActions ? (
         <div className="ds-gatepass-actions ds-no-print">
-          <button type="button" className="ds-gatepass-action-btn is-primary" onClick={handlePrint}>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-            <span>Print Pass</span>
-          </button>
-
           <button type="button" className="ds-gatepass-action-btn" onClick={handleShare}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="18" cy="5" r="3" />
@@ -218,7 +209,16 @@ export function VisitorGatePassCard({
               <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
               <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
-            <span>Share Link</span>
+            <span>Share</span>
+          </button>
+
+          <button type="button" className="ds-gatepass-action-btn is-primary" onClick={handlePrint}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Download</span>
           </button>
 
           {onExit ? (

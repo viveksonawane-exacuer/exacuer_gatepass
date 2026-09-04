@@ -578,6 +578,18 @@ export function MobileApprovalsPage() {
           </div>
         </div>
 
+        <div className="vm-approvals-section-head">
+          <div>
+            <h2 className="vm-approvals-section-title">
+              {ut(lang, TABS.find((t) => t.id === tab)?.labelKey || "tab_pending")}
+            </h2>
+            <p className="vm-approvals-section-sub">
+              {formatCount(filteredItems.length, lang)}{" "}
+              {filteredItems.length === 1 ? "visitor" : "visitors"} in this queue
+            </p>
+          </div>
+        </div>
+
         {error ? <p className="login-error" style={{ textAlign: "center" }}>{error}</p> : null}
         {loading ? (
           <>
